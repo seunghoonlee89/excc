@@ -1,0 +1,98 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+
+# C extensions
+*.so
+*.dylib
+
+# Distribution / packaging
+.Python
+env/
+bin/
+build/
+develop-eggs/
+dist/
+eggs/
+lib64/
+parts/
+sdist/
+var/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Local log files
+*~
+
+# Calculation examples
+*.molden
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+
+# Translations
+*.mo
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# Rope
+.ropeproject
+
+# Django stuff:
+*.log
+*.pot
+
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+pyscf/lib/deps
+pyscf/lib/config.h
+
+settings.py
+
+# NECI (FCIQMC) output files
+neci.*
+fciqmc_stats*
+FCIMCStats*
+RDMEstimates
+TwoRDM*
+spinfree_TwoRDM*
+FCIDUMP
+POPSFILE*
+INITIATORStats
+NodeFile*
+OneRDM*
+
+# Memoization and caching
+tmp/
+my_test/
+nodex/
+
+# IDEs
+.idea/
+.vscode/
+
+# HCI
+config.json
+integrals_cache.dat
+result.json
+wf_eps1_*dat
+1rdm.csv
+output.dat
+
+# backup files
+*_bak
