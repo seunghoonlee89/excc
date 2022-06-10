@@ -1,10 +1,11 @@
 #!/usr/bin/env python
-#
-# Author: Seunghoon Lee <seunghoonlee89@gmail.com>
-#
 
 '''
-A simple example to run externally corrected (ex)-CCSD calculation.
+A simple example to run externally corrected (ex)-CCSD calculation
+using FCI-solver.
+
+Author:
+    Seunghoon Lee
 '''
 
 import pyscf

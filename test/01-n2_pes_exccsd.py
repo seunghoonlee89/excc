@@ -4,7 +4,13 @@
 #
 
 '''
-A simple example to run TCCSD and TCCSD(T) calculation.
+N2 PES calculation with externally corrected (ex)-CCSD calculation
+using FCI-solver.
+level shift and iterative damping without diis is recommended
+for the stretched bond geometries.
+
+Author:
+    Seunghoon Lee
 '''
 
 import pyscf
@@ -18,7 +24,7 @@ def n2(atom, damp):
     mf = mol.RHF().run()
     
     #################################
-    # variational HCI wave function #
+    # variational FCI wave function #
     #################################
     no_cas = 6 
     ne_cas = 6 
@@ -45,9 +51,9 @@ def n2(atom, damp):
                 break 
     mc.ci = find_n_spin_gs_state(mc, 0)
    
-    #################
-    # tailored CCSD #
-    #################
+    #############################
+    # externally corrected CCSD #
+    #############################
     from pyscf import cc 
     myexcc = excc.EXCCSD(mc)
     myexcc.verbose          = 5 
