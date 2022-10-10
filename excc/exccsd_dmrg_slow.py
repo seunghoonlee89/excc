@@ -53,8 +53,16 @@ class DMRGEXCCSD(FCIEXCCSD):
         dD = ncas_occ2 * ncas_vir2
         dT = ncas_occ3 * ncas_vir3
 
-        #reorder = self._casci.fcisolver.dmrg_args['reorder']
-        reorder = [] 
+        import os
+        scr = self._casci.fcisolver.scratchDirectory
+        freorder = "%s/node0/orbital_reorder.npy"%(scr)
+        if os.path.isfile(freorder):
+            reorder = np.load(freorder)
+            if np.array_equal(reorder, np.arange(ncas)):
+                reorder = [] 
+        else:
+            reorder = [] 
+
         def get_cisdtq_vec_cas(vals, dets):
             c0     = np.zeros(1)
             c1a    = np.zeros((dS))
@@ -149,8 +157,6 @@ class DMRGEXCCSD(FCIEXCCSD):
             return c1a/c0, c2aa/c0, c2ab/c0, c3aaa/c0, c3aab/c0, \
                    c4aaab/c0, c4aabb/c0 
 
-        import os
-        scr = self._casci.fcisolver.scratchDirectory
         fvals = "%s/node0/sample-vals.npy"%(scr)
         fdets = "%s/node0/sample-dets.npy"%(scr)
         if os.path.isfile(fvals) and os.path.isfile(fdets):

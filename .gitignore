@@ -94,6 +94,12 @@ wf_eps1_*dat
 1rdm.csv
 output.dat
 
+# DMRG
+dmrg.conf
+dmrg.out
+scratch
+nodex
+
 # backup files
 *_bak
 
