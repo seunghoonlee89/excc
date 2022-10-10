@@ -264,7 +264,8 @@ class EXCCSD(ccsd.CCSD):
         keys = set(('max_cycle', 'conv_tol', 'iterative_damping',
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
-                    'async_io', 'incore_complete', 'cc2', "ncore", "ncas", "nelec_cas", "_casci", "ci", "sparse_tol"))
+                    'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
+                    "nelec_cas", "_casci", "ci", "sparse_tol"))
         self._keys = set(self.__dict__.keys()).union(keys)
         self._casci  = mc
         self.ncore   = mc.ncore
@@ -356,6 +357,13 @@ class EXCCSD(ccsd.CCSD):
                   * np.einsum('i,j->ij', t3signs, t1signs) / c0
         c4aabb  = fcivec[t2addrs[:,None], t2addrs] \
                   * np.einsum('i,j->ij', t2signs, t2signs) / c0
+
+        #print('c0')
+        #print(c0)
+        #print('c1a/c0')
+        #print(c1a[index1])
+        #print('c2ab/c0')
+        #print(c2ab[index1,:][:,index1])
 
         return c1a[index1], c2aa[index2], c2ab[index1,:][:,index1], \
                c3aaa[index3], c3aab[index2,:][:,index1], \
