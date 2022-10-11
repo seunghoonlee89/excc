@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdlib.h>
 #include <stdint.h>
+#include <inttypes.h>
 
 int Sc(int i, int a, int nocc) { return nocc * ( a + 1 ) - ( i + 1 ); }
 int Dc(int i, int j, int a, int b, int nocc2)
@@ -14,8 +15,8 @@ int D(int i, int j, int a, int b, int nocc, int nvir)
 { return ((i*nocc+j)*nvir+a)*nvir+b; } 
 size_t T(int i, int j, int k, int a, int b, int c, int nocc, int nvir)
 { return ((((i*nocc+(size_t)(j))*nocc+k)*nvir+a)*nvir+b)*nvir+c; } 
-int Q(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir)
-{ return ((((((i*nocc+j)*nocc+k)*nocc+l)*nvir+a)*nvir+b)*nvir+c)*nvir+d; } 
+int64_t Q(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir)
+{ return (((((((int64_t)i*nocc+j)*nocc+k)*nocc+l)*nvir+a)*nvir+b)*nvir+c)*nvir+d; } 
 
 double t1xt1aa(int i, int j, int a, int b, int nocc, int nvir, double *t1)
 {
@@ -490,12 +491,12 @@ void c4_to_t4(double *t4aaab, double *t4aabb, double *c4aaab, double *c4aabb, do
 {
     int i, j, k, l, a, b, c, d, m_ijab;
     int ijkabc, ld, ijkabcld_c;
-    int ijklabcd_t11, ijklabcd_t21, ijklabcd_t31, ijklabcd_t41, ijklabcd_t51, ijklabcd_t61;
-    int ijklabcd_t12, ijklabcd_t22, ijklabcd_t32, ijklabcd_t42, ijklabcd_t52, ijklabcd_t62;
-    int ijklabcd_t13, ijklabcd_t23, ijklabcd_t33, ijklabcd_t43, ijklabcd_t53, ijklabcd_t63;
-    int ijklabcd_t14, ijklabcd_t24, ijklabcd_t34, ijklabcd_t44, ijklabcd_t54, ijklabcd_t64;
-    int ijklabcd_t15, ijklabcd_t25, ijklabcd_t35, ijklabcd_t45, ijklabcd_t55, ijklabcd_t65;
-    int ijklabcd_t16, ijklabcd_t26, ijklabcd_t36, ijklabcd_t46, ijklabcd_t56, ijklabcd_t66;
+    int64_t ijklabcd_t11, ijklabcd_t21, ijklabcd_t31, ijklabcd_t41, ijklabcd_t51, ijklabcd_t61;
+    int64_t ijklabcd_t12, ijklabcd_t22, ijklabcd_t32, ijklabcd_t42, ijklabcd_t52, ijklabcd_t62;
+    int64_t ijklabcd_t13, ijklabcd_t23, ijklabcd_t33, ijklabcd_t43, ijklabcd_t53, ijklabcd_t63;
+    int64_t ijklabcd_t14, ijklabcd_t24, ijklabcd_t34, ijklabcd_t44, ijklabcd_t54, ijklabcd_t64;
+    int64_t ijklabcd_t15, ijklabcd_t25, ijklabcd_t35, ijklabcd_t45, ijklabcd_t55, ijklabcd_t65;
+    int64_t ijklabcd_t16, ijklabcd_t26, ijklabcd_t36, ijklabcd_t46, ijklabcd_t56, ijklabcd_t66;
     int ijab, klcd, ijabklcd_c;
 
     double tmp, tmp2;
@@ -527,7 +528,7 @@ void c4_to_t4(double *t4aaab, double *t4aabb, double *c4aaab, double *c4aabb, do
                 ijklabcd_t14 = Q(i, j, k, l, a, c, b, d, nocc, nvir);
                 ijklabcd_t15 = Q(i, j, k, l, b, a, c, d, nocc, nvir);
                 ijklabcd_t16 = Q(i, j, k, l, c, b, a, d, nocc, nvir);
-        
+
                 t4aaab[ijklabcd_t11] =  tmp;
                 t4aaab[ijklabcd_t12] =  tmp;
                 t4aaab[ijklabcd_t13] =  tmp;
@@ -642,7 +643,12 @@ void c4_to_t4(double *t4aaab, double *t4aabb, double *c4aaab, double *c4aabb, do
                 ijklabcd_t12 = Q(j, i, k, l, b, a, c, d, nocc, nvir);
                 ijklabcd_t13 = Q(i, j, k, l, b, a, c, d, nocc, nvir);
                 ijklabcd_t14 = Q(j, i, k, l, a, b, c, d, nocc, nvir);
-        
+
+                //printf("ijklabcd11,%" PRId64 "\n", ijklabcd_t11);
+                //printf("ijklabcd12,%" PRId64 "\n", ijklabcd_t12);
+                //printf("ijklabcd13,%" PRId64 "\n", ijklabcd_t13);
+                //printf("ijklabcd14,%" PRId64 "\n", ijklabcd_t14);
+ 
                 t4aabb[ijklabcd_t11] =  tmp;
                 t4aabb[ijklabcd_t12] =  tmp;
                 t4aabb[ijklabcd_t13] = -tmp;

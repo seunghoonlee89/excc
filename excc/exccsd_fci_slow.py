@@ -23,6 +23,9 @@ def kernel(the_exccsd, eris=None, t1=None, t2=None, max_cycle=50,
 
     t1, t2, t1_t3c, t2_t3t4c = the_exccsd.get_ext_t_amps(eris)
     cput1   = cput0 = (logger.process_clock(), logger.perf_counter())
+
+    #dbg
+    #t1, t2 = the_exccsd.get_init_guess(eris)
     e_exccsd = the_exccsd.energy(t1, t2, eris)
     e_prev  = e_exccsd
     log.info('Init E_corr(exCCSD) = %.15g', e_exccsd)
@@ -45,46 +48,87 @@ def kernel(the_exccsd, eris=None, t1=None, t2=None, max_cycle=50,
     err_ene = 1.0
     err_amp = 1.0
 
-    while not is_converged and not is_diverged and not is_max_cycle:
-        t1_new, t2_new = the_exccsd.update_amps(t1, t2, t1_t3c, t2_t3t4c, eris)
+    if not the_exccsd.imag_tevol: 
+        while not is_converged and not is_diverged and not is_max_cycle:
+            t1_new, t2_new = the_exccsd.update_amps(t1, t2, t1_t3c, t2_t3t4c, eris)
+    
+            tmp_vec  = the_exccsd.amplitudes_to_vector(t1, t2)
+            tmp_vec -= the_exccsd.amplitudes_to_vector(t1_new, t2_new)
+            err_amp  = np.linalg.norm(tmp_vec)
+            tmp_vec  = None
+    
+            if alpha < 1.0:
+                t1_new  = (1-alpha) * t1 + alpha * t1_new
+                t2_new *= alpha
+                t2_new += (1-alpha) * t2
+    
+            t1, t2 = t1_new, t2_new
+            t1_new = t2_new = None
+            
+            t1, t2 = the_exccsd.run_diis(t1, t2, istep, err_amp, err_ene, adiis)
+    
+            e_prev, e_exccsd  = e_exccsd, the_exccsd.energy(t1, t2, eris)
+            err_ene          = (e_exccsd - e_prev)
+    
+            log.info('cycle = %d  E_corr(exCCSD) = %.15g  dE = %.9g  norm(t1,t2) = %.6g', istep+1, e_exccsd, err_ene, err_amp)
+            cput1 = log.timer('exCCSD iter', *cput1)
+    
+            is_converged = abs(err_ene) < tol and err_amp < tolnormt
+            is_max_cycle = istep == max_cycle
+            is_diverged = abs(e_exccsd - e_prev) > 100
+            #if adiis is None and the_exccsd.level_shift > 0. and alpha < 1.:  
+            #    is_converged = abs(e_exccsd - e_prev) < tol or e_exccsd - e_prev > 0
+            istep += 1
+    else: 
+        l = the_exccsd.l 
+        dl = the_exccsd.dl 
+        fac = the_exccsd.fac
+        order = the_exccsd.order
+        thresh = the_exccsd.thresh
+        real = the_exccsd.real
 
-        tmp_vec  = the_exccsd.amplitudes_to_vector(t1, t2)
-        tmp_vec -= the_exccsd.amplitudes_to_vector(t1_new, t2_new)
-        err_amp  = np.linalg.norm(tmp_vec)
-        tmp_vec  = None
+        max_cycle = int(l / dl + 0.1 * dl)
+        if not real:
+            t1 = np.array(t1, dtype=np.complex128)
+            t2 = np.array(t2, dtype=np.complex128)
 
-        if alpha < 1.0:
-            t1_new  = (1-alpha) * t1 + alpha * t1_new
-            t2_new *= alpha
-            t2_new += (1-alpha) * t2
+        t = 0.0
+        for istep in range(max_cycle):
+            dt1,dt2 = the_exccsd.RK(t1, t2, t1_t3c, t2_t3t4c, eris, dl, fac=fac, order=order)
+            tmpvec = the_exccsd.amplitudes_to_vector(dt1, dt2)
+            normdt = np.linalg.norm(tmpvec)
+            t1 += dl * dt1
+            t2 += dl * dt2
+            tmpvec = the_exccsd.amplitudes_to_vector(t1, t2)
+            normt = np.linalg.norm(tmpvec)
+            e_prev, e_exccsd = e_exccsd, the_exccsd.energy(t1, t2, eris)
+            t += dl
+            if real:
+                print('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt))
+            else:
+                tmpvec = the_exccsd.amplitudes_to_vector(t1.imag, t2.imag)
+                normi = np.linalg.norm(tmpvec)
+                print('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f},normi={:.4e}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt,normi))
+            tmpvec = None
+            if abs(e_exccsd-e_prev) < tol and normdt < tolnormt:
+                is_converged = True 
+                break
+            if abs(e_exccsd) > thresh:
+                break
 
-        t1, t2 = t1_new, t2_new
-        t1_new = t2_new = None
-        
-        t1, t2 = the_exccsd.run_diis(t1, t2, istep, err_amp, err_ene, adiis)
-
-        e_prev, e_exccsd  = e_exccsd, the_exccsd.energy(t1, t2, eris)
-        err_ene          = (e_exccsd - e_prev)
-
-        log.info('cycle = %d  E_corr(exCCSD) = %.15g  dE = %.9g  norm(t1,t2) = %.6g', istep+1, e_exccsd, err_ene, err_amp)
-        cput1 = log.timer('exCCSD iter', *cput1)
-
-        is_converged = abs(err_ene) < tol and err_amp < tolnormt
-        is_max_cycle = istep == max_cycle
-        is_diverged = abs(e_exccsd - e_prev) > 100
-        if adiis is None and the_exccsd.level_shift > 0. and alpha < 1.:  
-            is_converged = abs(e_exccsd - e_prev) < tol or e_exccsd - e_prev > 0
-        istep += 1
+    log.info('max_memory %d MB (current use %d MB)',
+             the_exccsd.max_memory, lib.current_memory()[0])
 
     log.timer('exCCSD', *cput0)
     return is_converged, e_exccsd, t1, t2
 
-def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris):
+def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
     assert(isinstance(eris, ccsd._ChemistsERIs))
     nocc, nvir = t1.shape
     fock = eris.fock
-    mo_e_o = eris.mo_energy[:nocc]
-    mo_e_v = eris.mo_energy[nocc:] + cc.level_shift
+    if not cc.imag_tevol:
+        mo_e_o = eris.mo_energy[:nocc]
+        mo_e_v = eris.mo_energy[nocc:] + cc.level_shift
 
     fov = fock[:nocc,nocc:].copy()
     foo = fock[:nocc,:nocc].copy()
@@ -94,9 +138,10 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris):
     Fvv = imd.cc_Fvv(t1,t2,eris)
     Fov = imd.cc_Fov(t1,t2,eris)
 
-    # Move energy terms to the other side
-    Foo[np.diag_indices(nocc)] -= mo_e_o
-    Fvv[np.diag_indices(nvir)] -= mo_e_v
+    if not cc.imag_tevol:
+        # Move energy terms to the other side
+        Foo[np.diag_indices(nocc)] -= mo_e_o
+        Fvv[np.diag_indices(nvir)] -= mo_e_v
 
     # T1 equation
     t1new  = t1_t3c.copy()
@@ -152,8 +197,9 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris):
     else:
         Loo = imd.Loo(t1, t2, eris)
         Lvv = imd.Lvv(t1, t2, eris)
-        Loo[np.diag_indices(nocc)] -= mo_e_o
-        Lvv[np.diag_indices(nvir)] -= mo_e_v
+        if not cc.imag_tevol:
+            Loo[np.diag_indices(nocc)] -= mo_e_o
+            Lvv[np.diag_indices(nvir)] -= mo_e_v
 
         Woooo = imd.cc_Woooo(t1, t2, eris)
         Wvoov = imd.cc_Wvoov(t1, t2, eris)
@@ -175,10 +221,14 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris):
         tmp = lib.einsum('bkci,kjac->ijab', Wvovo, t2)
         t2new -= (tmp + tmp.transpose(1,0,3,2))
 
-    eia = mo_e_o[:,None] - mo_e_v
-    eijab = lib.direct_sum('ia,jb->ijab',eia,eia)
-    t1new /= eia
-    t2new /= eijab
+    if not cc.imag_tevol:
+        eia = mo_e_o[:,None] - mo_e_v
+        eijab = lib.direct_sum('ia,jb->ijab',eia,eia)
+        t1new /= eia
+        t2new /= eijab
+    else:
+        t1new *= -fac 
+        t2new *= -fac
 
     return t1new, t2new
 
@@ -265,7 +315,8 @@ class EXCCSD(ccsd.CCSD):
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
                     'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
-                    "nelec_cas", "_casci", "ci", "sparse_tol"))
+                    "nelec_cas", "_casci", "ci", "sparse_tol", "imag_tevol",
+                    "l", "dl", "fac", "order", "thresh", "real"))
         self._keys = set(self.__dict__.keys()).union(keys)
         self._casci  = mc
         self.ncore   = mc.ncore
@@ -273,6 +324,15 @@ class EXCCSD(ccsd.CCSD):
         self.nelec_cas = (mc.nelecas[0], mc.nelecas[1])
         self.ci      = mc.ci
         self.sparse_tol = None
+
+        # parameters for imaginary time evolution
+        self.imag_tevol = False
+        self.l   = 100. 
+        self.dl  = 1. 
+        self.fac = 1. 
+        self.order = 4 
+        self.thresh = 100. 
+        self.real = True 
 
     def dump_flags(self, verbose=None):
         ncas  = self.ncas
@@ -368,6 +428,27 @@ class EXCCSD(ccsd.CCSD):
         return c1a[index1], c2aa[index2], c2ab[index1,:][:,index1], \
                c3aaa[index3], c3aab[index2,:][:,index1], \
                c4aaab[index3,:][:,index1], c4aabb[index2,:][:,index2]
+
+    def compute_derivative(self, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
+        return update_amps(self, t1, t2, t1_t3c, t2_t3t4c, eris, fac=fac)
+
+    def RK(self, t1, t2, t1_t3c, t2_t3t4c, eris, h, fac=1.0, order=1):
+        dt11, dt21 = self.compute_derivative(t1, t2, t1_t3c, t2_t3t4c, eris, fac=fac)
+        if order == 1:
+            dt1, dt2 = dt11, dt21
+        else:
+            t1_, t2_ = t1 + dt11 * h * 0.5, t2 + dt21 * h * 0.5
+            dt12, dt22 = self.compute_derivative(
+                 t1_, t2_, t1_t3c, t2_t3t4c, eris, fac=fac)
+            t1_, t2_ = t1 + dt12 * h * 0.5, t2 + dt22 * h * 0.5
+            dt13, dt23 = self.compute_derivative(
+                 t1_, t2_, t1_t3c, t2_t3t4c, eris, fac=fac)
+            t1_, t2_ = t1 + dt13 * h, t2 + dt23 * h
+            dt14, dt24 = self.compute_derivative(
+                 t1_, t2_, t1_t3c, t2_t3t4c, eris, fac=fac)
+            dt1 = (dt11 + dt12 * 2.0 + dt13 * 2.0 + dt14) / 6.0
+            dt2 = (dt21 + dt22 * 2.0 + dt23 * 2.0 + dt24) / 6.0
+        return dt1, dt2
 
     get_ext_t_amps = get_ext_t_amps
 

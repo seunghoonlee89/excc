@@ -95,6 +95,7 @@ wf_eps1_*dat
 output.dat
 
 # DMRG
+FCIDUMP
 dmrg.conf
 dmrg.out
 scratch

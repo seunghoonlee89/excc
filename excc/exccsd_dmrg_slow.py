@@ -18,13 +18,14 @@ NUM_ZERO = 1e-8
 class DMRGEXCCSD(FCIEXCCSD):
     def __init__(self, mc, frozen=None, mo_coeff=None, mo_occ=None):
         assert isinstance(mc, casci.CASCI)
-        assert isinstance(mc.fcisolver, dmrgscf.DMRGCI)
+        #assert isinstance(mc.fcisolver, dmrgscf.DMRGCI)
         ccsd.CCSD.__init__(self, mc._scf, frozen=frozen, mo_coeff=mo_coeff, mo_occ=mo_occ)
         keys = set(('max_cycle', 'conv_tol', 'iterative_damping',
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
                     'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
-                    "nelec_cas", "_casci", "ci", "sparse_tol"))
+                    "nelec_cas", "_casci", "ci", "sparse_tol", "imag_tevol",
+                    "l", "dl", "fac", "order", "thresh", "real"))
         self._keys = set(self.__dict__.keys()).union(keys)
 
         self._casci  = mc
@@ -34,6 +35,15 @@ class DMRGEXCCSD(FCIEXCCSD):
         assert mc.nelecas[0] == mc.nelecas[1]   # for restricted case
         self.ci      = None 
         self.sparse_tol = None
+
+        # parameters for imaginary time evolution
+        self.imag_tevol = False
+        self.l   = 100. 
+        self.dl  = 1. 
+        self.fac = 1. 
+        self.order = 4 
+        self.thresh = 100. 
+        self.real = True 
 
     def get_ext_c_amps(self):
         ncas  = self.ncas
@@ -169,5 +179,4 @@ class DMRGEXCCSD(FCIEXCCSD):
 
 class DMRGREXCCSD(DMRGEXCCSD):
     pass
-
 
