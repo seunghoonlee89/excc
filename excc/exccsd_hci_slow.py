@@ -25,7 +25,8 @@ class HCIEXCCSD(FCIEXCCSD):
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
                     'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
-                    "nelec_cas", "_casci", "ci", "sparse_tol", "arrow", "dice", "output"))
+                    "nelec_cas", "_casci", "ci", "sparse_tol", "ext_orbs",
+                    "arrow", "dice", "output"))
         self._keys = set(self.__dict__.keys()).union(keys)
         self._casci  = mc
         self.ncore   = mc.ncore
@@ -35,6 +36,25 @@ class HCIEXCCSD(FCIEXCCSD):
         self.output = 'output.dat'
         self.arrow = False #isinstance(mc.fcisolver, pyscf.cornell_shci.shci.SHCI)
         self.dice = isinstance(mc.fcisolver, pyscf.shciscf.shci.SHCI)
+
+        # parameters for imaginary time evolution
+        self.imag_tevol = False
+        self.l   = 100. 
+        self.dl  = 1. 
+        self.fac = 1. 
+        self.order = 4 
+        self.thresh = 100. 
+        self.real = True 
+        self._keys = self._keys.union(["imag_tevol", "l", "dl", \
+                                       "fac", "order", "thresh", "real"])
+
+        # parameters for min res
+        self.minres = False 
+        self.method = "krylov" 
+        self.precond = "finv" 
+        self.inner_m = 10 
+        self.outer_k = 6 
+        self._keys = self._keys.union(["minres", "method", "precond", "inner_m", "outer_k"])
 
     @staticmethod
     def read_hci_output(output, arrow=False, dice=False):
@@ -173,6 +193,6 @@ class HCIEXCCSD(FCIEXCCSD):
         vals, orb_as, orb_bs = HCIEXCCSD.read_hci_output(self.output, self.arrow, self.dice)
         return get_cisdtq_vec_cas(vals, orb_as, orb_bs)
 
-class HCIREXCCSD(HCIEXCCSD):
+class HCIEXRCCSD(HCIEXCCSD):
     pass
 

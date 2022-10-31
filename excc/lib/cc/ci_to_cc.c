@@ -13,8 +13,14 @@ int DSc(int i, int j, int k, int a, int b, int c, int nocc, int nvir, int nocc2)
 int S(int i, int a, int nvir) { return i*nvir+a; } 
 int D(int i, int j, int a, int b, int nocc, int nvir)
 { return ((i*nocc+j)*nvir+a)*nvir+b; } 
+int Dab(int i, int j, int a, int b, int nvira, int noccb, int nvirb)
+{ return ((i*noccb+j)*nvira+a)*nvirb+b; } 
 size_t T(int i, int j, int k, int a, int b, int c, int nocc, int nvir)
 { return ((((i*nocc+(size_t)(j))*nocc+k)*nvir+a)*nvir+b)*nvir+c; } 
+size_t Taab(int i, int j, int k, int a, int b, int c, int nocca, int nvira, int noccb, int nvirb)
+{ return ((((i*nocca+(size_t)(j))*noccb+k)*nvira+a)*nvira+b)*nvirb+c; } 
+size_t Tabb(int i, int j, int k, int a, int b, int c, int nvira, int noccb, int nvirb)
+{ return ((((i*noccb+(size_t)(j))*noccb+k)*nvira+a)*nvirb+b)*nvirb+c; } 
 int64_t Q(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir)
 { return (((((((int64_t)i*nocc+j)*nocc+k)*nocc+l)*nvir+a)*nvir+b)*nvir+c)*nvir+d; } 
 
@@ -31,6 +37,18 @@ double t1xt1ab(int i, int j, int a, int b, int nocc, int nvir, double *t1)
     return t1[S(i, a, nvir)] * t1[S(j, b, nvir)];
 }
 
+double t1xt1xt1aaa(int i, int j, int k, int a, int b, int c, int nocc, int nvir, double *t1)
+{
+    double t1xt1xt1 = 0.0;
+    t1xt1xt1 += t1[S(i, a, nvir)] * t1[S(j, b, nvir)] * t1[S(k, c, nvir)];
+    t1xt1xt1 -= t1[S(i, a, nvir)] * t1[S(j, c, nvir)] * t1[S(k, b, nvir)];
+    t1xt1xt1 -= t1[S(i, b, nvir)] * t1[S(j, a, nvir)] * t1[S(k, c, nvir)];
+    t1xt1xt1 += t1[S(i, b, nvir)] * t1[S(j, c, nvir)] * t1[S(k, a, nvir)];
+    t1xt1xt1 += t1[S(i, c, nvir)] * t1[S(j, a, nvir)] * t1[S(k, b, nvir)];
+    t1xt1xt1 -= t1[S(i, c, nvir)] * t1[S(j, b, nvir)] * t1[S(k, a, nvir)];
+    return t1xt1xt1;
+}
+
 double t1xt2aaa(int i, int j, int k, int a, int b, int c, int nocc, int nvir, double *t1, double *t2aa)
 {
     double t1xt2 = 0.0;
@@ -44,18 +62,6 @@ double t1xt2aaa(int i, int j, int k, int a, int b, int c, int nocc, int nvir, do
     t1xt2 -= t1[S(k, b, nvir)] * t2aa[D(i, j, a, c, nocc, nvir)];
     t1xt2 += t1[S(k, c, nvir)] * t2aa[D(i, j, a, b, nocc, nvir)];
     return t1xt2;
-}
-
-double t1xt1xt1aaa(int i, int j, int k, int a, int b, int c, int nocc, int nvir, double *t1)
-{
-    double t1xt1xt1 = 0.0;
-    t1xt1xt1 += t1[S(i, a, nvir)] * t1[S(j, b, nvir)] * t1[S(k, c, nvir)];
-    t1xt1xt1 -= t1[S(i, a, nvir)] * t1[S(j, c, nvir)] * t1[S(k, b, nvir)];
-    t1xt1xt1 -= t1[S(i, b, nvir)] * t1[S(j, a, nvir)] * t1[S(k, c, nvir)];
-    t1xt1xt1 += t1[S(i, b, nvir)] * t1[S(j, c, nvir)] * t1[S(k, a, nvir)];
-    t1xt1xt1 += t1[S(i, c, nvir)] * t1[S(j, a, nvir)] * t1[S(k, b, nvir)];
-    t1xt1xt1 -= t1[S(i, c, nvir)] * t1[S(j, b, nvir)] * t1[S(k, a, nvir)];
-    return t1xt1xt1;
 }
 
 double t1xt2aab(int i, int j, int k, int a, int b, int c, int nocc, int nvir, double *t1, double *t2aa, double *t2ab)
@@ -77,6 +83,28 @@ double t1xt1xt1aab(int i, int j, int k, int a, int b, int c, int nocc, int nvir,
     return t1xt1xt1;
 }
 
+double t1xt3aaaa(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1a, double *t3aaa)
+{
+    double t1xt3 = 0.0;
+    t1xt3 += t1a[S(i, a, nvir)] * t3aaa[T(j, k, l, b, c, d, nocc, nvir)];
+    t1xt3 -= t1a[S(j, a, nvir)] * t3aaa[T(i, k, l, b, c, d, nocc, nvir)];
+    t1xt3 += t1a[S(k, a, nvir)] * t3aaa[T(i, j, l, b, c, d, nocc, nvir)];
+    t1xt3 -= t1a[S(l, a, nvir)] * t3aaa[T(i, j, k, b, c, d, nocc, nvir)];
+    t1xt3 -= t1a[S(i, b, nvir)] * t3aaa[T(j, k, l, a, c, d, nocc, nvir)];
+    t1xt3 += t1a[S(j, b, nvir)] * t3aaa[T(i, k, l, a, c, d, nocc, nvir)];
+    t1xt3 -= t1a[S(k, b, nvir)] * t3aaa[T(i, j, l, a, c, d, nocc, nvir)];
+    t1xt3 += t1a[S(l, b, nvir)] * t3aaa[T(i, j, k, a, c, d, nocc, nvir)];
+    t1xt3 += t1a[S(i, c, nvir)] * t3aaa[T(j, k, l, a, b, d, nocc, nvir)];
+    t1xt3 -= t1a[S(j, c, nvir)] * t3aaa[T(i, k, l, a, b, d, nocc, nvir)];
+    t1xt3 += t1a[S(k, c, nvir)] * t3aaa[T(i, j, l, a, b, d, nocc, nvir)];
+    t1xt3 -= t1a[S(l, c, nvir)] * t3aaa[T(i, j, k, a, b, d, nocc, nvir)];
+    t1xt3 -= t1a[S(i, d, nvir)] * t3aaa[T(j, k, l, a, b, c, nocc, nvir)];
+    t1xt3 += t1a[S(j, d, nvir)] * t3aaa[T(i, k, l, a, b, c, nocc, nvir)];
+    t1xt3 -= t1a[S(k, d, nvir)] * t3aaa[T(i, j, l, a, b, c, nocc, nvir)];
+    t1xt3 += t1a[S(l, d, nvir)] * t3aaa[T(i, j, k, a, b, c, nocc, nvir)];
+    return t1xt3;
+}
+
 double t1xt3aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1, double *t3aaa, double *t3aab)
 {
     double t1xt3 = 0.0;
@@ -90,6 +118,101 @@ double t1xt3aaab(int i, int j, int k, int l, int a, int b, int c, int d, int noc
     t1xt3 -= t1[S(k, b, nvir)] * t3aab[T(i, j, l, a, c, d, nocc, nvir)];
     t1xt3 += t1[S(k, c, nvir)] * t3aab[T(i, j, l, a, b, d, nocc, nvir)];
     t1xt3 += t1[S(l, d, nvir)] * t3aaa[T(i, j, k, a, b, c, nocc, nvir)];
+    return t1xt3;
+}
+
+double t1xt3aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1, double *t3aab)
+{
+    double t1xt3 = 0.0;
+    t1xt3 += t1[S(i, a, nvir)] * t3aab[T(k, l, j, c, d, b, nocc, nvir)];
+    t1xt3 -= t1[S(i, b, nvir)] * t3aab[T(k, l, j, c, d, a, nocc, nvir)];
+    t1xt3 -= t1[S(j, a, nvir)] * t3aab[T(k, l, i, c, d, b, nocc, nvir)];
+    t1xt3 += t1[S(j, b, nvir)] * t3aab[T(k, l, i, c, d, a, nocc, nvir)];
+    t1xt3 += t1[S(k, c, nvir)] * t3aab[T(i, j, l, a, b, d, nocc, nvir)];
+    t1xt3 -= t1[S(k, d, nvir)] * t3aab[T(i, j, l, a, b, c, nocc, nvir)];
+    t1xt3 -= t1[S(l, c, nvir)] * t3aab[T(i, j, k, a, b, d, nocc, nvir)];
+    t1xt3 += t1[S(l, d, nvir)] * t3aab[T(i, j, k, a, b, c, nocc, nvir)];
+    return t1xt3;
+}
+
+double ut1xt1ab(int i, int j, int a, int b, int nvira, int nvirb, double *t1a, double *t1b)
+{
+    return t1a[S(i, a, nvira)] * t1b[S(j, b, nvirb)];
+}
+
+double ut1xt2aab(int i, int j, int k, int a, int b, int c, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t2aa, double *t2ab)
+{
+    double t1xt2 = 0.0;
+    t1xt2 += t1a[S(i, a, nvira)] * t2ab[Dab(j, k, b, c, nvira, noccb, nvirb)];
+    t1xt2 -= t1a[S(i, b, nvira)] * t2ab[Dab(j, k, a, c, nvira, noccb, nvirb)];
+    t1xt2 -= t1a[S(j, a, nvira)] * t2ab[Dab(i, k, b, c, nvira, noccb, nvirb)];
+    t1xt2 += t1a[S(j, b, nvira)] * t2ab[Dab(i, k, a, c, nvira, noccb, nvirb)];
+    t1xt2 += t1b[S(k, c, nvirb)] * t2aa[D(i, j, a, b, nocca, nvira)];
+    return t1xt2;
+}
+
+double ut1xt2abb(int i, int j, int k, int a, int b, int c, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t2ab, double *t2bb)
+{
+    double t1xt2 = 0.0;
+    t1xt2 += t1a[S(i, a, nvira)] * t2bb[D(j, k, b, c, noccb, nvirb)];
+    t1xt2 += t2ab[Dab(i, j, a, b, nvira, noccb, nvirb)] * t1b[S(k, c, nvirb)];
+    t1xt2 -= t2ab[Dab(i, j, a, c, nvira, noccb, nvirb)] * t1b[S(k, b, nvirb)];
+    t1xt2 -= t2ab[Dab(i, k, a, b, nvira, noccb, nvirb)] * t1b[S(j, c, nvirb)];
+    t1xt2 += t2ab[Dab(i, k, a, c, nvira, noccb, nvirb)] * t1b[S(j, b, nvirb)];
+    return t1xt2;
+}
+
+double ut1xt1xt1aab(int i, int j, int k, int a, int b, int c, int nvira, int nvirb, double *t1a, double *t1b)
+{
+    double t1xt1xt1 = 0.0;
+    t1xt1xt1 += t1a[S(i, a, nvira)] * t1a[S(j, b, nvira)] * t1b[S(k, c, nvirb)];
+    t1xt1xt1 -= t1a[S(i, b, nvira)] * t1a[S(j, a, nvira)] * t1b[S(k, c, nvirb)];
+    return t1xt1xt1;
+}
+
+double ut1xt3aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t3aaa, double *t3aab)
+{
+    double t1xt3 = 0.0;
+    t1xt3 += t1a[S(i, a, nvira)] * t3aab[Taab(j, k, l, b, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(i, b, nvira)] * t3aab[Taab(j, k, l, a, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1a[S(i, c, nvira)] * t3aab[Taab(j, k, l, a, b, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(j, a, nvira)] * t3aab[Taab(i, k, l, b, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1a[S(j, b, nvira)] * t3aab[Taab(i, k, l, a, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(j, c, nvira)] * t3aab[Taab(i, k, l, a, b, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1a[S(k, a, nvira)] * t3aab[Taab(i, j, l, b, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(k, b, nvira)] * t3aab[Taab(i, j, l, a, c, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1a[S(k, c, nvira)] * t3aab[Taab(i, j, l, a, b, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1b[S(l, d, nvirb)] * t3aaa[T(i, j, k, a, b, c, nocca, nvira)];
+    return t1xt3;
+}
+
+double ut1xt3aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t3aab, double *t3abb)
+{
+    double t1xt3 = 0.0;
+    t1xt3 += t1a[S(i, a, nvira)] * t3abb[Tabb(j, k, l, b, c, d, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(i, b, nvira)] * t3abb[Tabb(j, k, l, a, c, d, nvira, noccb, nvirb)];
+    t1xt3 -= t1a[S(j, a, nvira)] * t3abb[Tabb(i, k, l, b, c, d, nvira, noccb, nvirb)];
+    t1xt3 += t1a[S(j, b, nvira)] * t3abb[Tabb(i, k, l, a, c, d, nvira, noccb, nvirb)];
+    t1xt3 += t1b[S(k, c, nvirb)] * t3aab[Taab(i, j, l, a, b, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1b[S(k, d, nvirb)] * t3aab[Taab(i, j, l, a, b, c, nocca, nvira, noccb, nvirb)];
+    t1xt3 -= t1b[S(l, c, nvirb)] * t3aab[Taab(i, j, k, a, b, d, nocca, nvira, noccb, nvirb)];
+    t1xt3 += t1b[S(l, d, nvirb)] * t3aab[Taab(i, j, k, a, b, c, nocca, nvira, noccb, nvirb)];
+    return t1xt3;
+}
+
+double ut1xt3abbb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t3abb, double *t3bbb)
+{
+    double t1xt3 = 0.0;
+    t1xt3 += t1a[S(i, a, nvira)] * t3bbb[T(j, k, l, b, c, d, noccb, nvirb)];
+    t1xt3 += t3abb[Tabb(i, j, k, a, b, c, nvira, noccb, nvirb)] * t1b[S(l, d, nvirb)];
+    t1xt3 -= t3abb[Tabb(i, j, k, a, b, d, nvira, noccb, nvirb)] * t1b[S(l, c, nvirb)];
+    t1xt3 += t3abb[Tabb(i, j, k, a, c, d, nvira, noccb, nvirb)] * t1b[S(l, b, nvirb)];
+    t1xt3 -= t3abb[Tabb(i, j, l, a, b, c, nvira, noccb, nvirb)] * t1b[S(k, d, nvirb)];
+    t1xt3 += t3abb[Tabb(i, j, l, a, b, d, nvira, noccb, nvirb)] * t1b[S(k, c, nvirb)];
+    t1xt3 -= t3abb[Tabb(i, j, l, a, c, d, nvira, noccb, nvirb)] * t1b[S(k, b, nvirb)];
+    t1xt3 += t3abb[Tabb(i, k, l, a, b, c, nvira, noccb, nvirb)] * t1b[S(j, d, nvirb)];
+    t1xt3 -= t3abb[Tabb(i, k, l, a, b, d, nvira, noccb, nvirb)] * t1b[S(j, c, nvirb)];
+    t1xt3 += t3abb[Tabb(i, k, l, a, c, d, nvira, noccb, nvirb)] * t1b[S(j, b, nvirb)];
     return t1xt3;
 }
 
@@ -127,20 +250,6 @@ double t1xc3aaab(int i, int j, int k, int l, int a, int b, int c, int d, int noc
     return t1xt3;
 }
 
-double t1xt3aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1, double *t3aab)
-{
-    double t1xt3 = 0.0;
-    t1xt3 += t1[S(i, a, nvir)] * t3aab[T(k, l, j, c, d, b, nocc, nvir)];
-    t1xt3 -= t1[S(i, b, nvir)] * t3aab[T(k, l, j, c, d, a, nocc, nvir)];
-    t1xt3 -= t1[S(j, a, nvir)] * t3aab[T(k, l, i, c, d, b, nocc, nvir)];
-    t1xt3 += t1[S(j, b, nvir)] * t3aab[T(k, l, i, c, d, a, nocc, nvir)];
-    t1xt3 += t1[S(k, c, nvir)] * t3aab[T(i, j, l, a, b, d, nocc, nvir)];
-    t1xt3 -= t1[S(k, d, nvir)] * t3aab[T(i, j, l, a, b, c, nocc, nvir)];
-    t1xt3 -= t1[S(l, c, nvir)] * t3aab[T(i, j, k, a, b, d, nocc, nvir)];
-    t1xt3 += t1[S(l, d, nvir)] * t3aab[T(i, j, k, a, b, c, nocc, nvir)];
-    return t1xt3;
-}
-
 double t1xc3aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nocc2, int nvir, double *t1, double *t2aa, double *t2ab, double *c3aab, double c0)
 {
     double t1xt3 = 0.0;
@@ -155,6 +264,51 @@ double t1xc3aabb(int i, int j, int k, int l, int a, int b, int c, int d, int noc
     return t1xt3;
 }
 
+double ut2xt2aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t2aa, double *t2ab, double *t2bb)
+{
+    double t2xt2 = 0.0;
+    t2xt2 += t2aa[D(i, j, a, b, nocca, nvira)] * t2bb[D(k, l, c, d, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, k, a, c, nvira, noccb, nvirb)] * t2ab[Dab(j, l, b, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, k, a, d, nvira, noccb, nvirb)] * t2ab[Dab(j, l, b, c, nvira, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, k, b, c, nvira, noccb, nvirb)] * t2ab[Dab(j, l, a, d, nvira, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, k, b, d, nvira, noccb, nvirb)] * t2ab[Dab(j, l, a, c, nvira, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, l, a, c, nvira, noccb, nvirb)] * t2ab[Dab(j, k, b, d, nvira, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, l, a, d, nvira, noccb, nvirb)] * t2ab[Dab(j, k, b, c, nvira, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, l, b, c, nvira, noccb, nvirb)] * t2ab[Dab(j, k, a, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, l, b, d, nvira, noccb, nvirb)] * t2ab[Dab(j, k, a, c, nvira, noccb, nvirb)];
+    return t2xt2;
+}
+
+double ut2xt2abbb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t2ab, double *t2bb)
+{
+    double t2xt2 = 0.0;
+    t2xt2 += t2ab[Dab(i, j, a, b, nvira, noccb, nvirb)] * t2bb[D(k, l, c, d, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, j, a, c, nvira, noccb, nvirb)] * t2bb[D(k, l, b, d, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, j, a, d, nvira, noccb, nvirb)] * t2bb[D(k, l, b, c, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, k, a, b, nvira, noccb, nvirb)] * t2bb[D(j, l, c, d, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, k, a, c, nvira, noccb, nvirb)] * t2bb[D(j, l, b, d, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, k, a, d, nvira, noccb, nvirb)] * t2bb[D(j, l, b, c, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, l, a, b, nvira, noccb, nvirb)] * t2bb[D(j, k, c, d, noccb, nvirb)];
+    t2xt2 -= t2ab[Dab(i, l, a, c, nvira, noccb, nvirb)] * t2bb[D(j, k, b, d, noccb, nvirb)];
+    t2xt2 += t2ab[Dab(i, l, a, d, nvira, noccb, nvirb)] * t2bb[D(j, k, b, c, noccb, nvirb)];
+    return t2xt2;
+}
+
+double t2xt2aaaa(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t2aa)
+{
+    double t2xt2 = 0.0;
+    t2xt2 += t2aa[D(i, j, a, b, nocc, nvir)] * t2aa[D(k, l, c, d, nocc, nvir)];
+    t2xt2 -= t2aa[D(i, j, a, c, nocc, nvir)] * t2aa[D(k, l, b, d, nocc, nvir)];
+    t2xt2 += t2aa[D(i, j, a, d, nocc, nvir)] * t2aa[D(k, l, b, c, nocc, nvir)];
+    t2xt2 -= t2aa[D(i, k, a, b, nocc, nvir)] * t2aa[D(j, l, c, d, nocc, nvir)];
+    t2xt2 += t2aa[D(i, k, a, c, nocc, nvir)] * t2aa[D(j, l, b, d, nocc, nvir)];
+    t2xt2 -= t2aa[D(i, k, a, d, nocc, nvir)] * t2aa[D(j, l, b, c, nocc, nvir)];
+    t2xt2 += t2aa[D(i, l, a, b, nocc, nvir)] * t2aa[D(j, k, c, d, nocc, nvir)];
+    t2xt2 -= t2aa[D(i, l, a, c, nocc, nvir)] * t2aa[D(j, k, b, d, nocc, nvir)];
+    t2xt2 += t2aa[D(i, l, a, d, nocc, nvir)] * t2aa[D(j, k, b, c, nocc, nvir)];
+    return t2xt2;
+}
+
 double t2xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t2aa, double *t2ab)
 {
     double t2xt2 = 0.0;
@@ -164,9 +318,24 @@ double t2xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int noc
     t2xt2 -= t2aa[D(i, k, a, b, nocc, nvir)] * t2ab[D(j, l, c, d, nocc, nvir)];
     t2xt2 += t2aa[D(i, k, a, c, nocc, nvir)] * t2ab[D(j, l, b, d, nocc, nvir)];
     t2xt2 -= t2aa[D(i, k, b, c, nocc, nvir)] * t2ab[D(j, l, a, d, nocc, nvir)];
-    t2xt2 += t2ab[D(i, l, a, d, nocc, nvir)] * t2aa[D(j, k, b, c, nocc, nvir)];
-    t2xt2 -= t2ab[D(i, l, b, d, nocc, nvir)] * t2aa[D(j, k, a, c, nocc, nvir)];
-    t2xt2 += t2ab[D(i, l, c, d, nocc, nvir)] * t2aa[D(j, k, a, b, nocc, nvir)];
+    t2xt2 += t2aa[D(j, k, b, c, nocc, nvir)] * t2ab[D(i, l, a, d, nocc, nvir)];
+    t2xt2 -= t2aa[D(j, k, a, c, nocc, nvir)] * t2ab[D(i, l, b, d, nocc, nvir)];
+    t2xt2 += t2aa[D(j, k, a, b, nocc, nvir)] * t2ab[D(i, l, c, d, nocc, nvir)];
+    return t2xt2;
+}
+
+double ut2xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t2aa, double *t2ab)
+{
+    double t2xt2 = 0.0;
+    t2xt2 += t2aa[D(i, j, a, b, nocca, nvira)] * t2ab[Dab(k, l, c, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2aa[D(i, j, a, c, nocca, nvira)] * t2ab[Dab(k, l, b, d, nvira, noccb, nvirb)];
+    t2xt2 += t2aa[D(i, j, b, c, nocca, nvira)] * t2ab[Dab(k, l, a, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2aa[D(i, k, a, b, nocca, nvira)] * t2ab[Dab(j, l, c, d, nvira, noccb, nvirb)];
+    t2xt2 += t2aa[D(i, k, a, c, nocca, nvira)] * t2ab[Dab(j, l, b, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2aa[D(i, k, b, c, nocca, nvira)] * t2ab[Dab(j, l, a, d, nvira, noccb, nvirb)];
+    t2xt2 += t2aa[D(j, k, b, c, nocca, nvira)] * t2ab[Dab(i, l, a, d, nvira, noccb, nvirb)];
+    t2xt2 -= t2aa[D(j, k, a, c, nocca, nvira)] * t2ab[Dab(i, l, b, d, nvira, noccb, nvirb)];
+    t2xt2 += t2aa[D(j, k, a, b, nocca, nvira)] * t2ab[Dab(i, l, c, d, nvira, noccb, nvirb)];
     return t2xt2;
 }
 
@@ -183,6 +352,168 @@ double t2xt2aabb(int i, int j, int k, int l, int a, int b, int c, int d, int noc
     t2xt2 += t2ab[D(i, l, b, c, nocc, nvir)] * t2ab[D(j, k, a, d, nocc, nvir)];
     t2xt2 -= t2ab[D(i, l, b, d, nocc, nvir)] * t2ab[D(j, k, a, c, nocc, nvir)];
     return t2xt2;
+}
+
+
+double t1xt1xt2aaaa(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1a, double *t2aa)
+{
+    double t1xt1xt2 = 0.0;
+    t1xt1xt2 += t1a[S(i,a,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(k,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,b,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(k,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,a,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(k,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,c,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(k,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,a,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(k,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,d,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(k,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,b,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(k,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,c,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(k,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,b,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(k,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,d,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(k,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,c,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(k,l,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,d,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(k,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(j,a,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(k,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,b,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(k,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,a,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(k,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,c,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(k,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,a,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(k,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,d,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(k,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,b,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(k,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,c,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(k,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,b,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(k,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,d,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(k,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,c,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(k,l,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,d,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(k,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(i,a,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(j,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,b,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(j,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,a,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(j,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,c,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(j,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,a,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(j,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,d,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(j,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,b,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(j,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,c,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(j,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,b,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(j,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,d,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(j,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,c,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(j,l,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,d,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(j,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 += t1a[S(k,a,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,b,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,a,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,c,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,a,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,d,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,b,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,c,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,b,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,d,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,c,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,l,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,d,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 += t1a[S(i,a,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(j,k,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,b,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(j,k,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,a,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(j,k,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,c,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(j,k,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,a,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(j,k,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,d,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(j,k,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,b,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(j,k,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,c,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(j,k,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,b,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(j,k,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,d,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(j,k,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(i,c,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(j,k,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(i,d,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(j,k,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(l,a,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,k,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,b,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,k,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,a,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,k,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,c,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,k,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,a,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,k,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,d,nvir)] * t1a[S(i,a,nvir)] * t2aa[D(j,k,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,b,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,k,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,c,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,k,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,b,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,k,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,d,nvir)] * t1a[S(i,b,nvir)] * t2aa[D(j,k,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,c,nvir)] * t1a[S(i,d,nvir)] * t2aa[D(j,k,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,d,nvir)] * t1a[S(i,c,nvir)] * t2aa[D(j,k,a,b,nocc,nvir)];
+
+    t1xt1xt2 += t1a[S(j,a,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,b,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,l,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,a,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,c,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,l,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,a,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,d,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,b,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,c,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,l,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,b,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,d,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,l,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,c,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,l,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,d,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(k,a,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,b,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,l,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,a,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,c,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,l,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,a,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,l,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,d,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,l,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,b,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,c,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,l,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,b,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,d,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,l,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,c,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,l,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,d,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,l,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(j,a,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,k,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,b,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,k,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,a,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,k,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,c,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,k,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,a,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,k,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,d,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,k,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,b,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,k,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,c,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,k,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,b,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,k,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,d,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,k,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(j,c,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,k,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(j,d,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,k,a,b,nocc,nvir)];
+
+    t1xt1xt2 += t1a[S(l,a,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,k,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,b,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,k,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,a,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,k,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,c,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,k,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,a,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,k,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,d,nvir)] * t1a[S(j,a,nvir)] * t2aa[D(i,k,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,b,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,k,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,c,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,k,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,b,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,k,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,d,nvir)] * t1a[S(j,b,nvir)] * t2aa[D(i,k,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,c,nvir)] * t1a[S(j,d,nvir)] * t2aa[D(i,k,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,d,nvir)] * t1a[S(j,c,nvir)] * t2aa[D(i,k,a,b,nocc,nvir)];
+
+    t1xt1xt2 += t1a[S(k,a,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,j,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,b,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,j,c,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,a,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,j,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,c,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,j,b,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,a,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,j,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,d,nvir)] * t1a[S(l,a,nvir)] * t2aa[D(i,j,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,b,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,j,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,c,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,j,a,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,b,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,j,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,d,nvir)] * t1a[S(l,b,nvir)] * t2aa[D(i,j,a,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(k,c,nvir)] * t1a[S(l,d,nvir)] * t2aa[D(i,j,a,b,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(k,d,nvir)] * t1a[S(l,c,nvir)] * t2aa[D(i,j,a,b,nocc,nvir)];
+
+    t1xt1xt2 -= t1a[S(l,a,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,j,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,b,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,j,c,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,a,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,j,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,c,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,j,b,d,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,a,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,j,b,c,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,d,nvir)] * t1a[S(k,a,nvir)] * t2aa[D(i,j,b,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,b,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,j,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,c,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,j,a,d,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,b,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,j,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,d,nvir)] * t1a[S(k,b,nvir)] * t2aa[D(i,j,a,c,nocc,nvir)];
+    t1xt1xt2 -= t1a[S(l,c,nvir)] * t1a[S(k,d,nvir)] * t2aa[D(i,j,a,b,nocc,nvir)];
+    t1xt1xt2 += t1a[S(l,d,nvir)] * t1a[S(k,c,nvir)] * t2aa[D(i,j,a,b,nocc,nvir)];
+    return t1xt1xt2;
 }
 
 double t1xt1xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1, double *t2aa, double *t2ab)
@@ -218,6 +549,39 @@ double t1xt1xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int 
     return t1xt1xt2;
 }
 
+double ut1xt1xt2aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t2aa, double *t2ab)
+{
+    double t1xt1xt2 = 0.0;
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1a[S(j,b,nvira)] * t2ab[Dab(k,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1a[S(j,c,nvira)] * t2ab[Dab(k,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,b,nvira)] * t1a[S(j,c,nvira)] * t2ab[Dab(k,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1a[S(k,b,nvira)] * t2ab[Dab(j,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1a[S(k,c,nvira)] * t2ab[Dab(j,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,b,nvira)] * t1a[S(k,c,nvira)] * t2ab[Dab(j,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,a,nvira)] * t1a[S(k,b,nvira)] * t2ab[Dab(i,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1a[S(k,c,nvira)] * t2ab[Dab(i,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,b,nvira)] * t1a[S(k,c,nvira)] * t2ab[Dab(i,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1a[S(i,b,nvira)] * t2ab[Dab(k,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,a,nvira)] * t1a[S(i,c,nvira)] * t2ab[Dab(k,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,b,nvira)] * t1a[S(i,c,nvira)] * t2ab[Dab(k,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(k,a,nvira)] * t1a[S(i,b,nvira)] * t2ab[Dab(j,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(k,a,nvira)] * t1a[S(i,c,nvira)] * t2ab[Dab(j,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(k,b,nvira)] * t1a[S(i,c,nvira)] * t2ab[Dab(j,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(k,a,nvira)] * t1a[S(j,b,nvira)] * t2ab[Dab(i,l,c,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(k,a,nvira)] * t1a[S(j,c,nvira)] * t2ab[Dab(i,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(k,b,nvira)] * t1a[S(j,c,nvira)] * t2ab[Dab(i,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(j,k,b,c,nocca,nvira)];
+    t1xt1xt2 -= t1a[S(i,b,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(j,k,a,c,nocca,nvira)];
+    t1xt1xt2 += t1a[S(i,c,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(j,k,a,b,nocca,nvira)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,k,b,c,nocca,nvira)];
+    t1xt1xt2 += t1a[S(j,b,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,k,a,c,nocca,nvira)];
+    t1xt1xt2 -= t1a[S(j,c,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,k,a,b,nocca,nvira)];
+    t1xt1xt2 += t1a[S(k,a,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,j,b,c,nocca,nvira)];
+    t1xt1xt2 -= t1a[S(k,b,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,j,a,c,nocca,nvira)];
+    t1xt1xt2 += t1a[S(k,c,nvira)] * t1b[S(l,d,nvirb)] * t2aa[D(i,j,a,b,nocca,nvira)];
+    return t1xt1xt2;
+}
+
 double t1xt1xt2aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1, double *t2aa, double *t2ab)
 {
     double t1xt1xt2 = 0.0;
@@ -244,6 +608,98 @@ double t1xt1xt2aabb(int i, int j, int k, int l, int a, int b, int c, int d, int 
     return t1xt1xt2;
 }
 
+double ut1xt1xt2aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t2aa, double *t2ab, double *t2bb)
+{
+    double t1xt1xt2 = 0.0;
+    t1xt1xt2 += t1b[S(k,c,nvirb)] * t1b[S(l,d,nvirb)] * t2aa[D(i,j,a,b,nocca,nvira)];
+    t1xt1xt2 -= t1b[S(l,c,nvirb)] * t1b[S(k,d,nvirb)] * t2aa[D(i,j,a,b,nocca,nvira)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1a[S(j,b,nvira)] * t2bb[D(k,l,c,d,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1a[S(i,b,nvira)] * t2bb[D(k,l,c,d,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(k,c,nvirb)] * t2ab[Dab(j,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(k,d,nvirb)] * t2ab[Dab(j,l,b,c,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,b,nvira)] * t1b[S(k,c,nvirb)] * t2ab[Dab(j,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,b,nvira)] * t1b[S(k,d,nvirb)] * t2ab[Dab(j,l,a,c,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(l,c,nvirb)] * t2ab[Dab(j,k,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(l,d,nvirb)] * t2ab[Dab(j,k,b,c,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,b,nvira)] * t1b[S(l,c,nvirb)] * t2ab[Dab(j,k,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,b,nvira)] * t1b[S(l,d,nvirb)] * t2ab[Dab(j,k,a,c,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1b[S(k,c,nvirb)] * t2ab[Dab(i,l,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,a,nvira)] * t1b[S(k,d,nvirb)] * t2ab[Dab(i,l,b,c,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,b,nvira)] * t1b[S(k,c,nvirb)] * t2ab[Dab(i,l,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,b,nvira)] * t1b[S(k,d,nvirb)] * t2ab[Dab(i,l,a,c,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,a,nvira)] * t1b[S(l,c,nvirb)] * t2ab[Dab(i,k,b,d,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,a,nvira)] * t1b[S(l,d,nvirb)] * t2ab[Dab(i,k,b,c,nvira,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(j,b,nvira)] * t1b[S(l,c,nvirb)] * t2ab[Dab(i,k,a,d,nvira,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(j,b,nvira)] * t1b[S(l,d,nvirb)] * t2ab[Dab(i,k,a,c,nvira,noccb,nvirb)];
+    return t1xt1xt2;
+}
+
+double ut1xt1xt2abbb(int i, int j, int k, int l, int a, int b, int c, int d, int nocca, int nvira, int noccb, int nvirb, double *t1a, double *t1b, double *t2ab, double *t2bb)
+{
+    double t1xt1xt2 = 0.0;
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(j,b,nvirb)] * t2bb[D(k,l,c,d,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(j,c,nvirb)] * t2bb[D(k,l,b,d,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(j,d,nvirb)] * t2bb[D(k,l,b,c,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(k,b,nvirb)] * t2bb[D(j,l,c,d,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(k,c,nvirb)] * t2bb[D(j,l,b,d,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(k,d,nvirb)] * t2bb[D(j,l,b,c,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(l,b,nvirb)] * t2bb[D(j,k,c,d,noccb,nvirb)];
+    t1xt1xt2 -= t1a[S(i,a,nvira)] * t1b[S(l,c,nvirb)] * t2bb[D(j,k,b,d,noccb,nvirb)];
+    t1xt1xt2 += t1a[S(i,a,nvira)] * t1b[S(l,d,nvirb)] * t2bb[D(j,k,b,c,noccb,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,j,a,b,nvira,noccb,nvirb)] * t1b[S(k,c,nvirb)] * t1b[S(l,d,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,j,a,b,nvira,noccb,nvirb)] * t1b[S(k,d,nvirb)] * t1b[S(l,c,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,k,a,b,nvira,noccb,nvirb)] * t1b[S(j,c,nvirb)] * t1b[S(l,d,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,k,a,b,nvira,noccb,nvirb)] * t1b[S(j,d,nvirb)] * t1b[S(l,c,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,l,a,b,nvira,noccb,nvirb)] * t1b[S(j,c,nvirb)] * t1b[S(k,d,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,l,a,b,nvira,noccb,nvirb)] * t1b[S(j,d,nvirb)] * t1b[S(k,c,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,j,a,c,nvira,noccb,nvirb)] * t1b[S(k,b,nvirb)] * t1b[S(l,d,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,j,a,c,nvira,noccb,nvirb)] * t1b[S(k,d,nvirb)] * t1b[S(l,b,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,k,a,c,nvira,noccb,nvirb)] * t1b[S(j,b,nvirb)] * t1b[S(l,d,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,k,a,c,nvira,noccb,nvirb)] * t1b[S(j,d,nvirb)] * t1b[S(l,b,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,l,a,c,nvira,noccb,nvirb)] * t1b[S(j,b,nvirb)] * t1b[S(k,d,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,l,a,c,nvira,noccb,nvirb)] * t1b[S(j,d,nvirb)] * t1b[S(k,b,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,j,a,d,nvira,noccb,nvirb)] * t1b[S(k,b,nvirb)] * t1b[S(l,c,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,j,a,d,nvira,noccb,nvirb)] * t1b[S(k,c,nvirb)] * t1b[S(l,b,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,k,a,d,nvira,noccb,nvirb)] * t1b[S(j,b,nvirb)] * t1b[S(l,c,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,k,a,d,nvira,noccb,nvirb)] * t1b[S(j,c,nvirb)] * t1b[S(l,b,nvirb)];
+    t1xt1xt2 += t2ab[Dab(i,l,a,d,nvira,noccb,nvirb)] * t1b[S(j,b,nvirb)] * t1b[S(k,c,nvirb)];
+    t1xt1xt2 -= t2ab[Dab(i,l,a,d,nvira,noccb,nvirb)] * t1b[S(j,c,nvirb)] * t1b[S(k,b,nvirb)];
+    return t1xt1xt2;
+}
+
+double t1xt1xt1xt1aaaa(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1a)
+{
+    double t1xt1xt1xt1 = 0.0;
+    t1xt1xt1xt1 += t1a[S(i, a, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, a, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, a, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, a, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, b, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, a, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, a, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, b, nvir)];
+
+    t1xt1xt1xt1 -= t1a[S(i, b, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, b, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, b, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, b, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, a, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, b, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, b, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, a, nvir)];
+
+    t1xt1xt1xt1 += t1a[S(i, c, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, c, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, a, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, c, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, d, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, c, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, d, nvir)] * t1a[S(l, b, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, c, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, a, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, c, nvir)] * t1a[S(j, d, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, b, nvir)];
+
+    t1xt1xt1xt1 -= t1a[S(i, d, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, a, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, d, nvir)] * t1a[S(j, b, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, d, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, a, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, d, nvir)] * t1a[S(j, c, nvir)] * t1a[S(k, a, nvir)] * t1a[S(l, b, nvir)];
+    t1xt1xt1xt1 -= t1a[S(i, d, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, b, nvir)] * t1a[S(l, c, nvir)];
+    t1xt1xt1xt1 += t1a[S(i, d, nvir)] * t1a[S(j, a, nvir)] * t1a[S(k, c, nvir)] * t1a[S(l, b, nvir)];
+    return t1xt1xt1xt1;
+}
+
 double t1xt1xt1xt1aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1)
 {
     double t1xt1xt1xt1 = 0.0;
@@ -256,11 +712,34 @@ double t1xt1xt1xt1aaab(int i, int j, int k, int l, int a, int b, int c, int d, i
     return t1xt1xt1xt1;
 }
 
+double ut1xt1xt1xt1aaab(int i, int j, int k, int l, int a, int b, int c, int d, int nvira, int nvirb, double *t1a, double *t1b)
+{
+    double t1xt1xt1xt1 = 0.0;
+    t1xt1xt1xt1 += t1a[S(i, a, nvira)] * t1a[S(j, b, nvira)] * t1a[S(k, c, nvira)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 -= t1a[S(i, a, nvira)] * t1a[S(j, c, nvira)] * t1a[S(k, b, nvira)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 -= t1a[S(i, b, nvira)] * t1a[S(j, a, nvira)] * t1a[S(k, c, nvira)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 += t1a[S(i, b, nvira)] * t1a[S(j, c, nvira)] * t1a[S(k, a, nvira)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 += t1a[S(i, c, nvira)] * t1a[S(j, a, nvira)] * t1a[S(k, b, nvira)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 -= t1a[S(i, c, nvira)] * t1a[S(j, b, nvira)] * t1a[S(k, a, nvira)] * t1b[S(l, d, nvirb)];
+    return t1xt1xt1xt1;
+}
+
+// need dbg?
 double t1xt1xt1xt1aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nocc, int nvir, double *t1)
 {
     double t1xt1xt1xt1 = 0.0;
     t1xt1xt1xt1 += t1[S(i, a, nvir)] * t1[S(j, b, nvir)] * t1[S(k, c, nvir)] * t1[S(l, d, nvir)];
     t1xt1xt1xt1 -= t1[S(i, a, nvir)] * t1[S(j, b, nvir)] * t1[S(k, d, nvir)] * t1[S(l, c, nvir)];
+    return t1xt1xt1xt1;
+}
+
+double ut1xt1xt1xt1aabb(int i, int j, int k, int l, int a, int b, int c, int d, int nvira, int nvirb, double *t1a, double *t1b)
+{
+    double t1xt1xt1xt1 = 0.0;
+    t1xt1xt1xt1 += t1a[S(i, a, nvira)] * t1a[S(j, b, nvira)] * t1b[S(k, c, nvirb)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 -= t1a[S(i, a, nvira)] * t1a[S(j, b, nvira)] * t1b[S(k, d, nvirb)] * t1b[S(l, c, nvirb)];
+    t1xt1xt1xt1 -= t1a[S(i, b, nvira)] * t1a[S(j, a, nvira)] * t1b[S(k, c, nvirb)] * t1b[S(l, d, nvirb)];
+    t1xt1xt1xt1 += t1a[S(i, b, nvira)] * t1a[S(j, a, nvira)] * t1b[S(k, d, nvirb)] * t1b[S(l, c, nvirb)];
     return t1xt1xt1xt1;
 }
 
@@ -683,6 +1162,1670 @@ void c4_to_t4(double *t4aaab, double *t4aabb, double *c4aaab, double *c4aabb, do
                 t4aabb[ijklabcd_t42] = -tmp;
                 t4aabb[ijklabcd_t43] =  tmp;
                 t4aabb[ijklabcd_t44] =  tmp;  
+            }
+        }
+        }
+        }
+        }
+    }
+    }
+    }
+    }
+}
+
+void c2_to_t2u(double *t2aa, double *t2ab, double *t2bb, double *c2aa, double *c2ab, double *c2bb, double *t1a, double *t1b, int nocca, int nvira, int noccb, int nvirb, double numzero) 
+{
+    int i, j, a, b, ijab_c;
+    int ia, jb, iajb_c;
+    int m_jb;
+    double tmp;
+
+    ijab_c = -1;
+    for (b = 1; b < nvira; b++) {
+    for (a = 0; a < b; a++) {
+    for (j = nocca-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijab_c += 1;
+        tmp = c2aa[ijab_c]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp -= t1xt1aa (i, j, a, b, nocca, nvira, t1a); 
+            t2aa[(((i*nocca+j)*nvira+a)*nvira+b)] =  tmp;
+            t2aa[(((i*nocca+j)*nvira+b)*nvira+a)] = -tmp;
+            t2aa[(((j*nocca+i)*nvira+a)*nvira+b)] = -tmp;
+            t2aa[(((j*nocca+i)*nvira+b)*nvira+a)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+
+    ijab_c = -1;
+    for (b = 1; b < nvirb; b++) {
+    for (a = 0; a < b; a++) {
+    for (j = noccb-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijab_c += 1;
+        tmp = c2bb[ijab_c]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp -= t1xt1aa (i, j, a, b, noccb, nvirb, t1b); 
+            t2bb[(((i*noccb+j)*nvirb+a)*nvirb+b)] =  tmp;
+            t2bb[(((i*noccb+j)*nvirb+b)*nvirb+a)] = -tmp;
+            t2bb[(((j*noccb+i)*nvirb+a)*nvirb+b)] = -tmp;
+            t2bb[(((j*noccb+i)*nvirb+b)*nvirb+a)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+
+    m_jb = noccb*nvirb;
+    ia = -1;
+    for (a = 0; a < nvira; a++) {
+    for (i = nocca-1; i > -1; i--) {
+        ia += 1;
+        jb  =-1;
+        for (b = 0; b < nvirb; b++) {
+        for (j = noccb-1; j > -1; j--) {
+            jb += 1;
+            iajb_c = ia * m_jb + jb;
+            tmp = c2ab[iajb_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp -= ut1xt1ab (i, j, a, b, nvira, nvirb, t1a, t1b);
+                t2ab[(((i*noccb+j)*nvira+a)*nvirb+b)] =  tmp;
+            } 
+        }
+        }
+    }
+    }
+}
+
+void c3_to_t3u(double *t3aaa, double *t3aab, double *t3abb, double *t3bbb, double *c3aaa, double *c3aab, double *c3abb, double *c3bbb, double *t1a, double *t1b, double *t2aa, double *t2ab, double *t2bb, int nocca, int nvira, int noccb, int nvirb, double numzero) 
+{
+    int i, j, k, a, b, c, m_jkbc, m_kc;
+    size_t ijab, kc, ijabkc_c, ijkabc_c, ia, jkbc, iajkbc_c;
+
+    double tmp, tmp2;
+    ijkabc_c = -1;
+    for (c = 2; c < nvira; c++) {
+    for (b = 1; b < c; b++) {
+    for (a = 0; a < b; a++) {
+    for (k = nocca-1; k > 1; k--) {
+    for (j = k-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijkabc_c += 1;
+        tmp = c3aaa[ijkabc_c]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp2 = t1xt2aaa (i, j, k, a, b, c, nocca, nvira, t1a, t2aa); 
+            tmp2+= t1xt1xt1aaa (i, j, k, a, b, c, nocca, nvira, t1a); 
+            tmp -= tmp2; 
+
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t3aaa[(((((i*nocca+j)*nocca+k)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t3aaa[(((((j*nocca+k)*nocca+i)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t3aaa[(((((k*nocca+i)*nocca+j)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t3aaa[(((((i*nocca+k)*nocca+j)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t3aaa[(((((k*nocca+j)*nocca+i)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t3aaa[(((((j*nocca+i)*nocca+k)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+
+    ijkabc_c = -1;
+    for (c = 2; c < nvirb; c++) {
+    for (b = 1; b < c; b++) {
+    for (a = 0; a < b; a++) {
+    for (k = noccb-1; k > 1; k--) {
+    for (j = k-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijkabc_c += 1;
+        tmp = c3bbb[ijkabc_c]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp2 = t1xt2aaa (i, j, k, a, b, c, noccb, nvirb, t1b, t2bb); 
+            tmp2+= t1xt1xt1aaa (i, j, k, a, b, c, noccb, nvirb, t1b); 
+            tmp -= tmp2; 
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t3bbb[(((((i*noccb+j)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t3bbb[(((((j*noccb+k)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t3bbb[(((((k*noccb+i)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t3bbb[(((((i*noccb+k)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t3bbb[(((((k*noccb+j)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t3bbb[(((((j*noccb+i)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+
+    m_kc = noccb * nvirb;
+    ijab = -1;
+    for (b = 1; b < nvira; b++) {
+    for (a = 0; a < b; a++) {
+    for (j = nocca-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijab += 1;
+        kc = -1;
+        for (c = 0; c < nvirb; c++) {
+        for (k = noccb-1; k > -1; k--) {
+            kc += 1;
+            ijabkc_c = ijab * m_kc + kc;
+
+            tmp = c3aab[ijabkc_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp2 = ut1xt2aab(i, j, k, a, b, c, nocca, nvira, noccb, nvirb, t1a, t1b, t2aa, t2ab); 
+                tmp2+= ut1xt1xt1aab(i, j, k, a, b, c, nvira, nvirb, t1a ,t1b); 
+                tmp -= tmp2;    
+
+                t3aab[(((((i*nocca+j)*noccb+k)*nvira+a)*nvira+b)*nvirb+c)] =  tmp;
+                t3aab[(((((i*nocca+j)*noccb+k)*nvira+b)*nvira+a)*nvirb+c)] = -tmp;
+                t3aab[(((((j*nocca+i)*noccb+k)*nvira+a)*nvira+b)*nvirb+c)] = -tmp;
+                t3aab[(((((j*nocca+i)*noccb+k)*nvira+b)*nvira+a)*nvirb+c)] =  tmp;
+            }
+        }
+        }
+    }
+    }
+    }
+    }
+
+    m_jkbc = noccb * (noccb - 1) / 2 * nvirb * (nvirb - 1) / 2;
+    ia = -1;
+    for (a = 0; a < nvira; a++) {
+    for (i = nocca-1; i > -1; i--) {
+        ia += 1;
+        jkbc = -1;
+        for (c = 1; c < nvirb; c++) {
+        for (b = 0; b < c; b++) {
+        for (k = noccb-1; k > 0; k--) {
+        for (j = k-1; j > -1; j--) {
+            jkbc += 1;
+            iajkbc_c = ia * m_jkbc + jkbc;
+            tmp = c3abb[iajkbc_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp2 = ut1xt2abb(i, j, k, a, b, c, nvira, noccb, nvirb, t1a, t1b, t2ab, t2bb); 
+                tmp2+= ut1xt1xt1aab(j, k, i, b, c, a, nvirb, nvira, t1b ,t1a); 
+                tmp -= tmp2;    
+
+                t3abb[(((((i*noccb+j)*noccb+k)*nvira+a)*nvirb+b)*nvirb+c)] =  tmp;
+                t3abb[(((((i*noccb+j)*noccb+k)*nvira+a)*nvirb+c)*nvirb+b)] = -tmp;
+                t3abb[(((((i*noccb+k)*noccb+j)*nvira+a)*nvirb+b)*nvirb+c)] = -tmp;
+                t3abb[(((((i*noccb+k)*noccb+j)*nvira+a)*nvirb+c)*nvirb+b)] =  tmp;
+            }
+        }
+        }
+        }
+        }
+    }
+    }
+}
+
+void c4_to_t4u(double *t4aaaa, double *t4aaab, double *t4aabb, double *t4abbb, double *t4bbbb, double *c4aaaa, double *c4aaab, double *c4aabb, double *c4abbb, double *c4bbbb, double *t1a, double *t1b, double *t2aa, double *t2ab, double *t2bb, double *t3aaa, double *t3aab, double *t3abb, double *t3bbb,int nocca, int nvira, int noccb, int nvirb, double numzero) 
+{
+    int i, j, k, l, a, b, c, d, m_klcd, m_jklbcd, m_ld;
+    int ijkabc, ld, ijkabcld_c, ijklabcd;
+    int ijab, klcd, ijabklcd_c, ia, jklbcd, iajklbcd_c;
+    double tmp, tmp2;
+
+    ijklabcd = -1;
+    for (d = 3; d < nvira; d++) {
+    for (c = 2; c < d; c++) {
+    for (b = 1; b < c; b++) {
+    for (a = 0; a < b; a++) {
+    for (l = nocca-1; l > 1; l--) {
+    for (k = l-1; k > 0; k--) {
+    for (j = k-1; j > -1; j--) {
+    for (i = j-1; i > -2; i--) {
+        ijklabcd += 1;
+        tmp = c4aaaa[ijklabcd]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp2 = t1xt3aaaa (i, j, k, l, a, b, c, d, nocca, nvira, t1a, t3aaa);
+            tmp2+= t2xt2aaaa (i, j, k, l, a, b, c, d, nocca, nvira, t2aa);
+            tmp2+= t1xt1xt2aaaa (i, j, k, l, a, b, c, d, nocca, nvira, t1a, t2aa); 
+            tmp2+= t1xt1xt1xt1aaaa (i, j, k, l, a, b, c, d, nocca, nvira, t1a);
+
+            tmp -= tmp2; 
+
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+k)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+l)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+i)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+j)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+l)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+l)*nocca+j)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+i)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+k)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+j)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+j)*nocca+k)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+k)*nocca+i)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+l)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+j)*nocca+l)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+k)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+i)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+i)*nocca+j)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+l)*nocca+k)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+k)*nocca+j)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+i)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+i)*nocca+l)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)i*nocca+k)*nocca+j)*nocca+l)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)k*nocca+j)*nocca+l)*nocca+i)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)j*nocca+l)*nocca+i)*nocca+k)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+b)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+c)*nvira+d)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+d)*nvira+a)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+a)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+c)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+d)*nvira+b)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+b)*nvira+a)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+a)*nvira+c)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+d)*nvira+b)*nvira+c)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+b)*nvira+c)*nvira+a)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+c)*nvira+a)*nvira+d)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+a)*nvira+d)*nvira+b)] = -tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+b)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+d)*nvira+c)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+c)*nvira+a)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+a)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+d)*nvira+c)*nvira+b)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+c)*nvira+b)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+b)*nvira+a)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+a)*nvira+d)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+a)*nvira+c)*nvira+b)*nvira+d)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+c)*nvira+b)*nvira+d)*nvira+a)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+b)*nvira+d)*nvira+a)*nvira+c)] =  tmp;
+            t4aaaa[((((((((int64_t)l*nocca+i)*nocca+k)*nocca+j)*nvira+d)*nvira+a)*nvira+c)*nvira+b)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+
+    ijklabcd = -1;
+    for (d = 3; d < nvirb; d++) {
+    for (c = 2; c < d; c++) {
+    for (b = 1; b < c; b++) {
+    for (a = 0; a < b; a++) {
+    for (l = noccb-1; l > 1; l--) {
+    for (k = l-1; k > 0; k--) {
+    for (j = k-1; j > -1; j--) {
+    for (i = j-1; i > -2; i--) {
+        ijklabcd += 1;
+        tmp = c4bbbb[ijklabcd]; 
+        if(fabs(tmp) > numzero) 
+        {
+            tmp2 = t1xt3aaaa (i, j, k, l, a, b, c, d, noccb, nvirb, t1b, t3bbb);
+            tmp2+= t2xt2aaaa (i, j, k, l, a, b, c, d, noccb, nvirb, t2bb);
+            tmp2+= t1xt1xt2aaaa (i, j, k, l, a, b, c, d, noccb, nvirb, t1b, t2bb); 
+            tmp2+= t1xt1xt1xt1aaaa (i, j, k, l, a, b, c, d, noccb, nvirb, t1b);
+
+            tmp -= tmp2; 
+
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+l)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+i)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+j)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+l)*noccb+j)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+i)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+k)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+j)*noccb+k)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+k)*noccb+i)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+l)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+k)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+i)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+i)*noccb+j)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+k)*noccb+j)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+i)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+i)*noccb+l)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)k*noccb+j)*noccb+l)*noccb+i)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)j*noccb+l)*noccb+i)*noccb+k)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+d)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+a)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+d)*nvirb+b)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+a)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+c)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+b)*nvirb+c)*nvirb+a)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+c)*nvirb+a)*nvirb+d)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+d)*nvirb+b)] = -tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+c)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+a)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+a)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+c)*nvirb+b)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+a)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+a)*nvirb+d)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+c)*nvirb+b)*nvirb+d)*nvirb+a)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+b)*nvirb+d)*nvirb+a)*nvirb+c)] =  tmp;
+            t4bbbb[((((((((int64_t)l*noccb+i)*noccb+k)*noccb+j)*nvirb+d)*nvirb+a)*nvirb+c)*nvirb+b)] =  tmp;
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+    }
+
+    m_ld = noccb * nvirb;
+    ijkabc = -1;
+    for (c = 2; c < nvira; c++) {
+    for (b = 1; b < c; b++) {
+    for (a = 0; a < b; a++) {
+    for (k = nocca-1; k > 1; k--) {
+    for (j = k-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijkabc += 1;
+        ld = -1;
+        for (d = 0; d < nvirb; d++) {
+        for (l = noccb-1; l > -1; l--) {
+            ld += 1;
+            ijkabcld_c = ijkabc * m_ld + ld;
+            tmp = c4aaab[ijkabcld_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp2 = ut1xt3aaab (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t3aaa, t3aab);
+                tmp2+= ut2xt2aaab (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t2aa, t2ab);
+                tmp2+= ut1xt1xt2aaab (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t2aa, t2ab); 
+                tmp2+= ut1xt1xt1xt1aaab (i, j, k, l, a, b, c, d, nvira, nvirb, t1a, t1b);
+                tmp -= tmp2; 
+
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+j)*nocca+k)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+k)*nocca+i)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+i)*nocca+j)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)i*nocca+k)*nocca+j)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)k*nocca+j)*nocca+i)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+a)*nvira+b)*nvira+c)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+b)*nvira+c)*nvira+a)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+c)*nvira+a)*nvira+b)*nvirb+d)] = -tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+a)*nvira+c)*nvira+b)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+c)*nvira+b)*nvira+a)*nvirb+d)] =  tmp;
+                t4aaab[((((((((int64_t)j*nocca+i)*nocca+k)*noccb+l)*nvira+b)*nvira+a)*nvira+c)*nvirb+d)] =  tmp;
+            }
+        }
+        }
+    }
+    }
+    }
+    }
+    }
+    }
+
+    m_jklbcd = noccb*(noccb-1)*(noccb-2)/6 * nvirb*(nvirb-1)*(nvirb-2)/6;
+    ia = -1;
+    for (a = 0; a < nvira; a++) {
+    for (i = nocca-1; i > -1; i--) {
+        ia += 1;
+        jklbcd = -1;
+        for (d = 2; d < nvirb; d++) {
+        for (c = 1; c < d; c++) {
+        for (b = 0; b < c; b++) {
+        for (l = noccb-1; l > 1; l--) {
+        for (k = l-1; k > 0; k--) {
+        for (j = k-1; j > -1; j--) {
+            jklbcd += 1;
+            iajklbcd_c = ia * m_jklbcd + jklbcd;
+            tmp = c4abbb[iajklbcd_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp2 = ut1xt3abbb (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t3abb, t3bbb);
+                tmp2+= ut2xt2abbb (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t2ab, t2bb);
+                tmp2+= ut1xt1xt2abbb (i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t2ab, t2bb); 
+                tmp2+= ut1xt1xt1xt1aaab (j, k, l, i, b, c, d, a, nvirb, nvira, t1b, t1a);
+                tmp -= tmp2; 
+
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+k)*noccb+l)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+l)*noccb+j)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+j)*noccb+k)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+j)*noccb+l)*noccb+k)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+l)*noccb+k)*noccb+j)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+b)*nvirb+c)*nvirb+d)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+c)*nvirb+d)*nvirb+b)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+d)*nvirb+b)*nvirb+c)] = -tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+b)*nvirb+d)*nvirb+c)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+d)*nvirb+c)*nvirb+b)] =  tmp;
+                t4abbb[((((((((int64_t)i*noccb+k)*noccb+j)*noccb+l)*nvira+a)*nvirb+c)*nvirb+b)*nvirb+d)] =  tmp;
+            }
+        }
+        }
+        }
+        }
+        }
+        }
+    }
+    }
+
+
+    m_klcd = noccb*(noccb-1)/2 * nvirb*(nvirb-1)/2;
+    ijab = -1;
+    for (b = 1; b < nvira; b++) {
+    for (a = 0; a < b; a++) {
+    for (j = nocca-1; j > 0; j--) {
+    for (i = j-1; i > -1; i--) {
+        ijab += 1;
+        klcd  =-1;
+        for (d = 1; d < nvirb; d++) {
+        for (c = 0; c < d; c++) {
+        for (l = noccb-1; l > 0; l--) {
+        for (k = l-1; k > -1; k--) {
+            klcd += 1;
+            ijabklcd_c = ijab * m_klcd + klcd;
+            tmp = c4aabb[ijabklcd_c]; 
+            if(fabs(tmp) > numzero) 
+            {
+                tmp2 = ut1xt3aabb(i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t3aab, t3abb); 
+                tmp2+= ut2xt2aabb(i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t2aa, t2ab, t2bb); 
+                tmp2+= ut1xt1xt2aabb(i, j, k, l, a, b, c, d, nocca, nvira, noccb, nvirb, t1a, t1b, t2aa, t2ab, t2bb); 
+                tmp2+= ut1xt1xt1xt1aabb(i, j, k, l, a, b, c, d, nvira, nvirb, t1a, t1b); 
+                tmp -= tmp2; 
+
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+k)*noccb+l)*nvira+a)*nvira+b)*nvirb+c)*nvirb+d)] =  tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+k)*noccb+l)*nvira+a)*nvira+b)*nvirb+d)*nvirb+c)] = -tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+l)*noccb+k)*nvira+a)*nvira+b)*nvirb+c)*nvirb+d)] = -tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+l)*noccb+k)*nvira+a)*nvira+b)*nvirb+d)*nvirb+c)] =  tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+k)*noccb+l)*nvira+b)*nvira+a)*nvirb+c)*nvirb+d)] = -tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+k)*noccb+l)*nvira+b)*nvira+a)*nvirb+d)*nvirb+c)] =  tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+l)*noccb+k)*nvira+b)*nvira+a)*nvirb+c)*nvirb+d)] =  tmp;
+                t4aabb[((((((((int64_t)i*nocca+j)*noccb+l)*noccb+k)*nvira+b)*nvira+a)*nvirb+d)*nvirb+c)] = -tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+k)*noccb+l)*nvira+a)*nvira+b)*nvirb+c)*nvirb+d)] = -tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+k)*noccb+l)*nvira+a)*nvira+b)*nvirb+d)*nvirb+c)] =  tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+l)*noccb+k)*nvira+a)*nvira+b)*nvirb+c)*nvirb+d)] =  tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+l)*noccb+k)*nvira+a)*nvira+b)*nvirb+d)*nvirb+c)] = -tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+k)*noccb+l)*nvira+b)*nvira+a)*nvirb+c)*nvirb+d)] =  tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+k)*noccb+l)*nvira+b)*nvira+a)*nvirb+d)*nvirb+c)] = -tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+l)*noccb+k)*nvira+b)*nvira+a)*nvirb+c)*nvirb+d)] = -tmp;
+                t4aabb[((((((((int64_t)j*nocca+i)*noccb+l)*noccb+k)*nvira+b)*nvira+a)*nvirb+d)*nvirb+c)] =  tmp; 
             }
         }
         }

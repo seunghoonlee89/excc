@@ -11,6 +11,10 @@ from pyscf.lib   import logger
 from pyscf.ci.cisd  import tn_addrs_signs
 from ._fci_ci_to_cc import _c1_to_t1, _c2_to_t2, _c3_to_t3, _c4_to_t4
 
+from scipy import linalg as la
+from scipy import optimize as opt
+from scipy.sparse import linalg as spla
+
 NUM_ZERO = 1e-8
 
 def kernel(the_exccsd, eris=None, t1=None, t2=None, max_cycle=50,
@@ -48,13 +52,102 @@ def kernel(the_exccsd, eris=None, t1=None, t2=None, max_cycle=50,
     err_ene = 1.0
     err_amp = 1.0
 
-    if not the_exccsd.imag_tevol: 
+    if the_exccsd.imag_tevol:
+        l = the_exccsd.l 
+        dl = the_exccsd.dl 
+        fac = the_exccsd.fac
+        order = the_exccsd.order
+        thresh = the_exccsd.thresh
+        real = the_exccsd.real
+
+        max_cycle = int(l / dl + 0.1 * dl)
+        if not real:
+            t1 = np.array(t1, dtype=np.complex128)
+            t2 = np.array(t2, dtype=np.complex128)
+
+        normdt = 1.
+        t = 0.0
+        for istep in range(max_cycle):
+            dt1,dt2 = the_exccsd.RK(t1, t2, t1_t3c, t2_t3t4c, eris, dl, fac=fac, order=order)
+            tmpvec = the_exccsd.amplitudes_to_vector(dt1, dt2)
+            normdt_prev, normdt = normdt, np.linalg.norm(tmpvec)
+            t1 += dl * dt1
+            t2 += dl * dt2
+            tmpvec = the_exccsd.amplitudes_to_vector(t1, t2)
+            normt = np.linalg.norm(tmpvec)
+            e_prev, e_exccsd = e_exccsd, the_exccsd.energy(t1, t2, eris)
+            t += dl
+            if real:
+                log.info('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt))
+            else:
+                tmpvec = the_exccsd.amplitudes_to_vector(t1.imag, t2.imag)
+                normi = np.linalg.norm(tmpvec)
+                log.info('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f},normi={:.4e}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt,normi))
+            tmpvec = None
+            if abs(e_exccsd-e_prev) < tol and normdt < tolnormt:
+                is_converged = True 
+                break
+            #if normdt > normdt_prev:
+            #    is_converged = False 
+            #    break
+            #if e_exccsd > e_prev:
+            #    is_converged = False 
+            #    break
+            if abs(e_exccsd) > thresh:
+                break
+    elif the_exccsd.minres:
+        cycle = [0] 
+        x0 = the_exccsd.amplitudes_to_vector(t1, t2) 
+        def f_res(x):
+            t1, t2 = the_exccsd.vector_to_amplitudes(x)
+            e_exccsd = the_exccsd.energy(t1, t2, eris)
+            t1, t2 = the_exccsd.update_amps(t1, t2, t1_t3c, t2_t3t4c, eris)
+            res = the_exccsd.amplitudes_to_vector(t1, t2) 
+            norm = max_abs(res)
+            log.info("      cycle = %5d , E = %15.8g , norm(res) = %15.5g", cycle[0],
+                     e_exccsd, norm)
+            cycle[0] += 1
+            return res 
+
+        if the_exccsd.precond == 'finv':
+            def mop(x):
+                return the_exccsd.precond_finv(x, eris)
+            M = spla.LinearOperator((x0.shape[-1], x0.shape[-1]), matvec=mop)
+        elif the_exccsd.precond == 'diag':
+            def mop(x):
+                return the_exccsd.precond_diag(x, eris)
+            M = spla.LinearOperator((x0.shape[-1], x0.shape[-1]), matvec=mop)
+        else:
+            M = None
+    
+        if the_exccsd.method == 'krylov':
+            inner_m = the_exccsd.inner_m
+            outer_k = the_exccsd.outer_k
+            res = opt.root(f_res, x0, method='krylov',
+                           options={'fatol': tolnormt, 'tol_norm': safe_max_abs, 
+                                    'disp': True, 'maxiter': max_cycle // inner_m,
+                                    'line_search': 'wolfe',
+                                    'jac_options': {'rdiff': 1e-6, 'inner_maxiter': 100, 
+                                                    'inner_inner_m': inner_m, 'inner_tol': tolnormt * 0.5,
+                                                    'outer_k': outer_k, 'inner_M': M}
+                                   })
+        elif the_exccsd.method == 'df-sane':
+            res = opt.root(f_res, x0, method='df-sane',
+                           options={'fatol': tolnormt, 'disp': True, 'maxfev': max_cycle,
+                                    'fnorm': max_abs})
+        else:
+            raise ValueError
+
+        is_converged = res.success
+        t1, t2 = the_exccsd.vector_to_amplitudes(res.x)
+        e_exccsd = the_exccsd.energy(t1, t2, eris)
+    else: 
         while not is_converged and not is_diverged and not is_max_cycle:
             t1_new, t2_new = the_exccsd.update_amps(t1, t2, t1_t3c, t2_t3t4c, eris)
     
             tmp_vec  = the_exccsd.amplitudes_to_vector(t1, t2)
             tmp_vec -= the_exccsd.amplitudes_to_vector(t1_new, t2_new)
-            err_amp  = np.linalg.norm(tmp_vec)
+            err_amp_prev, err_amp  = err_amp, np.linalg.norm(tmp_vec)
             tmp_vec  = None
     
             if alpha < 1.0:
@@ -76,45 +169,9 @@ def kernel(the_exccsd, eris=None, t1=None, t2=None, max_cycle=50,
             is_converged = abs(err_ene) < tol and err_amp < tolnormt
             is_max_cycle = istep == max_cycle
             is_diverged = abs(e_exccsd - e_prev) > 100
-            #if adiis is None and the_exccsd.level_shift > 0. and alpha < 1.:  
-            #    is_converged = abs(e_exccsd - e_prev) < tol or e_exccsd - e_prev > 0
+            if adiis is None and the_exccsd.level_shift > 0. and alpha < 1.:  
+                is_converged = abs(e_exccsd - e_prev) < tol or err_amp - err_amp_prev > 0 #or e_exccsd - e_prev > 0 
             istep += 1
-    else: 
-        l = the_exccsd.l 
-        dl = the_exccsd.dl 
-        fac = the_exccsd.fac
-        order = the_exccsd.order
-        thresh = the_exccsd.thresh
-        real = the_exccsd.real
-
-        max_cycle = int(l / dl + 0.1 * dl)
-        if not real:
-            t1 = np.array(t1, dtype=np.complex128)
-            t2 = np.array(t2, dtype=np.complex128)
-
-        t = 0.0
-        for istep in range(max_cycle):
-            dt1,dt2 = the_exccsd.RK(t1, t2, t1_t3c, t2_t3t4c, eris, dl, fac=fac, order=order)
-            tmpvec = the_exccsd.amplitudes_to_vector(dt1, dt2)
-            normdt = np.linalg.norm(tmpvec)
-            t1 += dl * dt1
-            t2 += dl * dt2
-            tmpvec = the_exccsd.amplitudes_to_vector(t1, t2)
-            normt = np.linalg.norm(tmpvec)
-            e_prev, e_exccsd = e_exccsd, the_exccsd.energy(t1, t2, eris)
-            t += dl
-            if real:
-                print('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt))
-            else:
-                tmpvec = the_exccsd.amplitudes_to_vector(t1.imag, t2.imag)
-                normi = np.linalg.norm(tmpvec)
-                print('time={:.2f},Ecorr={:.8f},dE={:.4e},norm(dt1,dt2)={:.4e},normt={:.4f},normi={:.4e}'.format(t,e_exccsd,e_exccsd-e_prev,normdt,normt,normi))
-            tmpvec = None
-            if abs(e_exccsd-e_prev) < tol and normdt < tolnormt:
-                is_converged = True 
-                break
-            if abs(e_exccsd) > thresh:
-                break
 
     log.info('max_memory %d MB (current use %d MB)',
              the_exccsd.max_memory, lib.current_memory()[0])
@@ -126,7 +183,7 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
     assert(isinstance(eris, ccsd._ChemistsERIs))
     nocc, nvir = t1.shape
     fock = eris.fock
-    if not cc.imag_tevol:
+    if not cc.imag_tevol and not cc.minres:
         mo_e_o = eris.mo_energy[:nocc]
         mo_e_v = eris.mo_energy[nocc:] + cc.level_shift
 
@@ -138,7 +195,7 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
     Fvv = imd.cc_Fvv(t1,t2,eris)
     Fov = imd.cc_Fov(t1,t2,eris)
 
-    if not cc.imag_tevol:
+    if not cc.imag_tevol and not cc.minres:
         # Move energy terms to the other side
         Foo[np.diag_indices(nocc)] -= mo_e_o
         Fvv[np.diag_indices(nvir)] -= mo_e_v
@@ -197,7 +254,7 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
     else:
         Loo = imd.Loo(t1, t2, eris)
         Lvv = imd.Lvv(t1, t2, eris)
-        if not cc.imag_tevol:
+        if not cc.imag_tevol and not cc.minres:
             Loo[np.diag_indices(nocc)] -= mo_e_o
             Lvv[np.diag_indices(nvir)] -= mo_e_v
 
@@ -221,12 +278,12 @@ def update_amps(cc, t1, t2, t1_t3c, t2_t3t4c, eris, fac=1.0):
         tmp = lib.einsum('bkci,kjac->ijab', Wvovo, t2)
         t2new -= (tmp + tmp.transpose(1,0,3,2))
 
-    if not cc.imag_tevol:
+    if not cc.imag_tevol and not cc.minres:
         eia = mo_e_o[:,None] - mo_e_v
         eijab = lib.direct_sum('ia,jb->ijab',eia,eia)
         t1new /= eia
         t2new /= eijab
-    else:
+    elif cc.imag_tevol:
         t1new *= -fac 
         t2new *= -fac
 
@@ -306,6 +363,66 @@ def get_ext_t_amps(the_exccsd, eris):
     t2_t3t4c[nc:, nc:, :ncas_vir, :ncas_vir] = t2_t3t4c_cas
     return t1, t2, t1_t3c, t2_t3t4c 
 
+def max_abs(x):
+    """
+    Equivalent to np.max(np.abs(x)), but faster.
+    """
+    if np.iscomplexobj(x):
+        return np.abs(x).max()
+    else:
+        return max(np.max(x), abs(np.min(x)))
+
+def safe_max_abs(x):
+    if np.isfinite(x).all():
+        return max(np.max(x), abs(np.min(x)))
+    else:
+        return 1e+12
+
+def precond_finv(cc, vec, eris, tol=1e-8):
+    """
+    Fock inversion as preconditioner.
+    """
+    vec = vec.ravel()
+    t1, t2 = cc.vector_to_amplitudes(vec)
+    nocc, nvir = t1.shape
+    mo_e_o = eris.mo_energy[:nocc]
+    mo_e_v = eris.mo_energy[nocc:] + cc.level_shift
+    
+    eia = mo_e_o[:, None] - mo_e_v
+    eia[eia > -tol] = -tol
+    t1 /= eia
+    
+    for i in range(nocc):
+        t2[i] /= lib.direct_sum('a, jb -> jab', eia[i], eia)
+    return cc.amplitudes_to_vector(t1, t2)
+
+def precond_diag(cc, vec, eris):
+    """
+    Diagonal elements as preconditioner, works not well.
+    """
+    vec = vec.ravel()
+    t1, t2 = cc.vector_to_amplitudes(vec)
+    nocc, nvir = t1.shape
+
+    fock = eris.fock
+    
+    mo_e_o = eris.mo_energy[:nocc]
+    mo_e_v = eris.mo_energy[nocc:] + cc.level_shift
+    eia = mo_e_o[:, None] - mo_e_v
+    eia -= np.einsum('iaai -> ia', eris.ovvo)
+    t1 /= eia
+    
+    eijab = lib.direct_sum('ia,jb->ijab', eia, eia)
+    tmp = 0.5 * np.einsum('abab -> ab', eris.vvvv)
+    for i in range(nocc):
+        eijab[i, i] -= tmp
+    tmp = 0.5 * np.einsum('ijij -> ij', eris.oooo)
+    for i in range(nvir):
+        eijab[:, :, i, i] -= tmp
+    t2 /= eijab
+    return cc.amplitudes_to_vector(t1, t2)
+
+
 class EXCCSD(ccsd.CCSD):
     def __init__(self, mc, frozen=None, mo_coeff=None, mo_occ=None):
         assert isinstance(mc, casci.CASCI)
@@ -315,8 +432,7 @@ class EXCCSD(ccsd.CCSD):
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
                     'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
-                    "nelec_cas", "_casci", "ci", "sparse_tol", "imag_tevol",
-                    "l", "dl", "fac", "order", "thresh", "real"))
+                    "nelec_cas", "_casci", "ci", "sparse_tol", "ext_orbs"))
         self._keys = set(self.__dict__.keys()).union(keys)
         self._casci  = mc
         self.ncore   = mc.ncore
@@ -324,15 +440,26 @@ class EXCCSD(ccsd.CCSD):
         self.nelec_cas = (mc.nelecas[0], mc.nelecas[1])
         self.ci      = mc.ci
         self.sparse_tol = None
+        self.ext_orbs = [] 
 
         # parameters for imaginary time evolution
         self.imag_tevol = False
         self.l   = 100. 
-        self.dl  = 1. 
+        self.dl  = 0.1
         self.fac = 1. 
         self.order = 4 
         self.thresh = 100. 
         self.real = True 
+        keys = keys.union(["imag_tevol", "l", "dl", \
+                           "fac", "order", "thresh", "real"])
+
+        # parameters for min res
+        self.minres = False 
+        self.method = "krylov" 
+        self.precond = "finv" 
+        self.inner_m = 10 
+        self.outer_k = 6 
+        keys = keys.union(["minres", "method", "precond", "inner_m", "outer_k"])
 
     def dump_flags(self, verbose=None):
         ncas  = self.ncas
@@ -363,6 +490,20 @@ class EXCCSD(ccsd.CCSD):
         log.info('diis_start_energy_diff = %g', self.diis_start_energy_diff)
         log.info('max_memory %d MB (current use %d MB)',
                  self.max_memory, lib.current_memory()[0])
+        log.info('imag_tevol             = %r', self.imag_tevol)
+        if self.imag_tevol:
+            log.info('l                      = %f', self.l)
+            log.info('dl                     = %f', self.dl)
+            log.info('fac                    = %f', self.fac)
+            log.info('order                  = %d', self.order)
+            log.info('thresh                 = %f', self.thresh)
+            log.info('real                   = %r', self.real)
+        log.info('min res solver         = %r', self.minres)
+        if self.minres:
+            log.info('method                 = %s', self.method)
+            log.info('precond                = %s', self.precond)
+            log.info('inner_m                = %d', self.inner_m)
+            log.info('outer_k                = %d', self.outer_k)
         return self
 
     def update_amps(self, t1, t2, t1_t3c, t2_t3t4c, eris):
@@ -418,12 +559,12 @@ class EXCCSD(ccsd.CCSD):
         c4aabb  = fcivec[t2addrs[:,None], t2addrs] \
                   * np.einsum('i,j->ij', t2signs, t2signs) / c0
 
-        #print('c0')
-        #print(c0)
-        #print('c1a/c0')
-        #print(c1a[index1])
-        #print('c2ab/c0')
-        #print(c2ab[index1,:][:,index1])
+#        print('c0')
+#        print(c0)
+#        print('c1a/c0')
+#        print(c1a[index1])
+#        print('c2ab/c0')
+#        print(c2ab[index1,:][:,index1])
 
         return c1a[index1], c2aa[index2], c2ab[index1,:][:,index1], \
                c3aaa[index3], c3aab[index2,:][:,index1], \
@@ -451,8 +592,10 @@ class EXCCSD(ccsd.CCSD):
         return dt1, dt2
 
     get_ext_t_amps = get_ext_t_amps
+    precond_finv = precond_finv
+    precond_diag = precond_diag
 
-class REXCCSD(EXCCSD):
+class EXRCCSD(EXCCSD):
     pass
 
 FCIEXCCSD = EXCCSD

@@ -24,8 +24,7 @@ class DMRGEXCCSD(FCIEXCCSD):
                     'conv_tol_normt', 'diis', 'diis_space', 'diis_file',
                     'diis_start_cycle', 'diis_start_energy_diff', 'direct',
                     'async_io', 'incore_complete', 'cc2', "ncore", "ncas",
-                    "nelec_cas", "_casci", "ci", "sparse_tol", "imag_tevol",
-                    "l", "dl", "fac", "order", "thresh", "real"))
+                    "nelec_cas", "_casci", "ci", "sparse_tol", "ext_orbs"))
         self._keys = set(self.__dict__.keys()).union(keys)
 
         self._casci  = mc
@@ -35,6 +34,7 @@ class DMRGEXCCSD(FCIEXCCSD):
         assert mc.nelecas[0] == mc.nelecas[1]   # for restricted case
         self.ci      = None 
         self.sparse_tol = None
+        self.ext_orbs = [] 
 
         # parameters for imaginary time evolution
         self.imag_tevol = False
@@ -44,13 +44,43 @@ class DMRGEXCCSD(FCIEXCCSD):
         self.order = 4 
         self.thresh = 100. 
         self.real = True 
+        self._keys = self._keys.union(["imag_tevol", "l", "dl", \
+                                       "fac", "order", "thresh", "real"])
+
+        # parameters for min res
+        self.minres = False 
+        self.method = "krylov" 
+        self.precond = "finv" 
+        self.inner_m = 10 
+        self.outer_k = 6 
+        self._keys = self._keys.union(["minres", "method", "precond", "inner_m", "outer_k"])
 
     def get_ext_c_amps(self):
+        if self.sparse_tol is not None:
+            tol = self.sparse_tol
+        else:
+            tol = 0. 
+
+        if len(self.ext_orbs) != 0:
+            ext_orbs = list(self.ext_orbs)
+            ext_t = lambda p: p in ext_orbs 
+            def check_ext(p_a, p_b, h_a, h_b):
+                flag_ext = True
+                for p in h_a:
+                    flag_ext = flag_ext and ext_t(p)  
+                for p in h_b:
+                    flag_ext = flag_ext and ext_t(p)  
+                for p in p_a:
+                    flag_ext = flag_ext and ext_t(p)  
+                for p in p_b:
+                    flag_ext = flag_ext and ext_t(p)  
+                return flag_ext
+        else:
+            ext_orbs = None 
+
         ncas  = self.ncas
         ncore = self.ncore
         nocc  = self.nocc
-        nmo   = self.nmo
-        nvir  = nmo - nocc
 
         ncas_vir  = ncore + ncas - nocc
         ncas_occ  = ncas - ncas_vir
@@ -83,6 +113,10 @@ class DMRGEXCCSD(FCIEXCCSD):
             c4aaab = np.zeros((dT,dS))
             c4aabb = np.zeros((dD,dD))
 
+##            #dbg
+#            max_val = np.zeros((100))
+#            max_val2 = np.zeros((100))
+
             def convert_phase_to_Fermi_vacuum(h_a, h_b, val):
                 n_perm = 0 
                 ranka = len(h_a)
@@ -101,6 +135,8 @@ class DMRGEXCCSD(FCIEXCCSD):
                               - (k * (k - 1) * (k - 2) // 6 + j * (j - 1) // 2 + i + 1)
     
             for val, det in zip(vals, dets):
+                if np.abs(val) < tol:
+                    continue 
                 occa =  det & 1
                 occb = (det & 2) >> 1 
                 # hole, ptcl
@@ -138,25 +174,56 @@ class DMRGEXCCSD(FCIEXCCSD):
                     idx_b = S(*h_b, *p_b)
                     c2ab[idx_a, idx_b] = convert_phase_to_Fermi_vacuum(h_a, h_b, val)
                 elif len(h_a) == 3 and len(h_b) == 0:
+                    if ext_orbs is not None:
+                        if not check_ext(p_a, p_b, h_a, h_b):
+                            continue
                     idx_a = T(*h_a, *p_a)
                     c3aaa[idx_a] = convert_phase_to_Fermi_vacuum(h_a, h_b, val)
                 elif len(h_a) == 2 and len(h_b) == 1:
+                    if ext_orbs is not None:
+                        if not check_ext(p_a, p_b, h_a, h_b):
+                            continue
                     idx_a = D(*h_a, *p_a)
                     idx_b = S(*h_b, *p_b)
                     c3aab[idx_a, idx_b] = convert_phase_to_Fermi_vacuum(h_a, h_b, val)
                 elif len(h_a) == 3 and len(h_b) == 1:
+                    if ext_orbs is not None:
+                        if not check_ext(p_a, p_b, h_a, h_b):
+                            continue
                     idx_a = T(*h_a, *p_a)
                     idx_b = S(*h_b, *p_b)
                     c4aaab[idx_a, idx_b] = convert_phase_to_Fermi_vacuum(h_a, h_b, val)
+
+##                    #dbg
+#                    if np.abs(val) > max_val[0]:
+#                        max_val[0] = np.abs(val)
+#                        max_val.sort()
+
                 elif len(h_a) == 2 and len(h_b) == 2:
+                    if ext_orbs is not None:
+                        if not check_ext(p_a, p_b, h_a, h_b):
+                            continue
                     idx_a = D(*h_a, *p_a)
                     idx_b = D(*h_b, *p_b)
                     c4aabb[idx_a, idx_b] = convert_phase_to_Fermi_vacuum(h_a, h_b, val)
+##                    #dbg
+#                    if np.abs(val) > max_val2[0]:
+#                        max_val2[0] = np.abs(val)
+#                        max_val2.sort()
                 else:
                     continue 
 
-            assert np.abs(c0) > NUM_ZERO
+#            print('c4aaab')
+#            for v in max_val[::-1]:
+#                print(v)
+#
+#            print('c4aabb')
+#            for v in max_val2[::-1]:
+#                print(v)
+#            #exit() 
 
+
+            assert np.abs(c0) > NUM_ZERO
             #print('c0')
             #print(c0)
             #print('c1a/c0')
@@ -177,6 +244,251 @@ class DMRGEXCCSD(FCIEXCCSD):
 
         return get_cisdtq_vec_cas(vals, dets)
 
-class DMRGREXCCSD(DMRGEXCCSD):
+    def exclude(self, r, typ='aaa'):
+        assert typ == 'aaa' or typ == 'baa'
+
+        if self.sparse_tol is not None:
+            tol = self.sparse_tol
+        else:
+            tol = 0. 
+
+        ncas  = self.ncas
+        ncore = self.ncore
+        nocc  = self.nocc
+        ncas_vir  = ncore + ncas - nocc
+        ncas_occ  = ncas - ncas_vir
+
+        import os
+        scr = self._casci.fcisolver.scratchDirectory
+        freorder = "%s/node0/orbital_reorder.npy"%(scr)
+        if os.path.isfile(freorder):
+            reorder = np.load(freorder)
+            if np.array_equal(reorder, np.arange(ncas)):
+                reorder = [] 
+        else:
+            reorder = [] 
+
+        fvals = "%s/node0/sample-vals.npy"%(scr)
+        fdets = "%s/node0/sample-dets.npy"%(scr)
+        if os.path.isfile(fvals) and os.path.isfile(fdets):
+            vals = np.load(fvals)
+            dets = np.load(fdets)
+        else:
+            assert False
+
+        ncount = 0
+        for val, det in zip(vals, dets):
+            if np.abs(val) < tol:
+                continue 
+            occa =  det & 1
+            occb = (det & 2) >> 1 
+            # hole, ptcl
+            h_a, h_b, p_a, p_b = [], [], [], []
+            if len(reorder) == 0:
+                for i in range(ncas_occ):
+                    if occa[i] == 0: h_a.append(i + ncore)
+                    if occb[i] == 0: h_b.append(i + ncore)
+                for a in range(ncas_occ, ncas, 1):
+                    if occa[a] == 1: p_a.append(a - ncas_occ)
+                    if occb[a] == 1: p_b.append(a - ncas_occ)
+            else:
+                for i in range(ncas):
+                    org_i = reorder[i]
+                    if occa[i] == 0 and org_i < ncas_occ:  h_a.append(org_i + ncore)
+                    if occb[i] == 0 and org_i < ncas_occ:  h_b.append(org_i + ncore)
+                    if occa[i] == 1 and org_i >= ncas_occ: p_a.append(org_i - ncas_occ)
+                    if occb[i] == 1 and org_i >= ncas_occ: p_b.append(org_i - ncas_occ)
+                h_a.sort()
+                h_b.sort()
+                p_a.sort()
+                p_b.sort()
+
+            assert len(h_a) == len(p_a) and len(h_b) == len(p_b)
+
+            if typ == 'aaa' and len(h_a) == 3 and len(h_b) == 0:
+                ncount += 1 
+                i, j, k = h_a
+                a, b, c = p_a 
+                r[i, j, k, a, b, c] = 0. 
+                r[i, k, j, a, b, c] = 0. 
+                r[j, i, k, a, b, c] = 0. 
+                r[j, k, i, a, b, c] = 0. 
+                r[k, j, i, a, b, c] = 0. 
+                r[k, i, j, a, b, c] = 0. 
+
+                r[i, j, k, a, c, b] = 0. 
+                r[i, k, j, a, c, b] = 0. 
+                r[j, i, k, a, c, b] = 0. 
+                r[j, k, i, a, c, b] = 0. 
+                r[k, j, i, a, c, b] = 0. 
+                r[k, i, j, a, c, b] = 0. 
+
+                r[i, j, k, b, a, c] = 0. 
+                r[i, k, j, b, a, c] = 0. 
+                r[j, i, k, b, a, c] = 0. 
+                r[j, k, i, b, a, c] = 0. 
+                r[k, j, i, b, a, c] = 0. 
+                r[k, i, j, b, a, c] = 0. 
+
+                r[i, j, k, b, c, a] = 0. 
+                r[i, k, j, b, c, a] = 0. 
+                r[j, i, k, b, c, a] = 0. 
+                r[j, k, i, b, c, a] = 0. 
+                r[k, j, i, b, c, a] = 0. 
+                r[k, i, j, b, c, a] = 0. 
+
+                r[i, j, k, c, a, b] = 0. 
+                r[i, k, j, c, a, b] = 0. 
+                r[j, i, k, c, a, b] = 0. 
+                r[j, k, i, c, a, b] = 0. 
+                r[k, j, i, c, a, b] = 0. 
+                r[k, i, j, c, a, b] = 0. 
+
+                r[i, j, k, c, b, a] = 0. 
+                r[i, k, j, c, b, a] = 0. 
+                r[j, i, k, c, b, a] = 0. 
+                r[j, k, i, c, b, a] = 0. 
+                r[k, j, i, c, b, a] = 0. 
+                r[k, i, j, c, b, a] = 0. 
+            elif typ == 'baa' and len(h_a) == 2 and len(h_b) == 1:
+                ncount += 1 
+                i = h_b
+                a = p_b 
+                j, k = h_a
+                b, c = p_a 
+
+                r[i, j, k, a, b, c] = 0.
+                r[i, k, j, a, b, c] = 0.
+
+                r[i, j, k, a, c, b] = 0.
+                r[i, k, j, a, c, b] = 0.
+            else:
+                continue 
+        print(typ, '= ', ncount)
+
+    def update_mask(self, r, typ='aaa'):
+        assert typ == 'aaa' or typ == 'baa'
+        r.fill(False)
+
+        if self.sparse_tol is not None:
+            tol = self.sparse_tol
+        else:
+            tol = 0. 
+
+        ncas  = self.ncas
+        ncore = self.ncore
+        nocc  = self.nocc
+        ncas_vir  = ncore + ncas - nocc
+        ncas_occ  = ncas - ncas_vir
+
+        import os
+        scr = self._casci.fcisolver.scratchDirectory
+        freorder = "%s/node0/orbital_reorder.npy"%(scr)
+        if os.path.isfile(freorder):
+            reorder = np.load(freorder)
+            if np.array_equal(reorder, np.arange(ncas)):
+                reorder = [] 
+        else:
+            reorder = [] 
+
+        fvals = "%s/node0/sample-vals.npy"%(scr)
+        fdets = "%s/node0/sample-dets.npy"%(scr)
+        if os.path.isfile(fvals) and os.path.isfile(fdets):
+            vals = np.load(fvals)
+            dets = np.load(fdets)
+        else:
+            assert False
+
+        ncount = 0
+        for val, det in zip(vals, dets):
+            if np.abs(val) < tol:
+                continue 
+            occa =  det & 1
+            occb = (det & 2) >> 1 
+            # hole, ptcl
+            h_a, h_b, p_a, p_b = [], [], [], []
+            if len(reorder) == 0:
+                for i in range(ncas_occ):
+                    if occa[i] == 0: h_a.append(i)
+                    if occb[i] == 0: h_b.append(i)
+                for a in range(ncas_occ, ncas, 1):
+                    if occa[a] == 1: p_a.append(a - ncas_occ)
+                    if occb[a] == 1: p_b.append(a - ncas_occ)
+            else:
+                for i in range(ncas):
+                    org_i = reorder[i]
+                    if occa[i] == 0 and org_i < ncas_occ:  h_a.append(org_i)
+                    if occb[i] == 0 and org_i < ncas_occ:  h_b.append(org_i)
+                    if occa[i] == 1 and org_i >= ncas_occ: p_a.append(org_i - ncas_occ)
+                    if occb[i] == 1 and org_i >= ncas_occ: p_b.append(org_i - ncas_occ)
+                h_a.sort()
+                h_b.sort()
+                p_a.sort()
+                p_b.sort()
+
+            assert len(h_a) == len(p_a) and len(h_b) == len(p_b)
+
+            if typ == 'aaa' and len(h_a) == 3 and len(h_b) == 0:
+                ncount += 1 
+                i, j, k = h_a
+                a, b, c = p_a 
+                r[i, j, k, a, b, c] = True 
+                r[i, k, j, a, b, c] = True 
+                r[j, i, k, a, b, c] = True 
+                r[j, k, i, a, b, c] = True 
+                r[k, j, i, a, b, c] = True 
+                r[k, i, j, a, b, c] = True 
+
+                r[i, j, k, a, c, b] = True 
+                r[i, k, j, a, c, b] = True 
+                r[j, i, k, a, c, b] = True 
+                r[j, k, i, a, c, b] = True 
+                r[k, j, i, a, c, b] = True 
+                r[k, i, j, a, c, b] = True 
+
+                r[i, j, k, b, a, c] = True 
+                r[i, k, j, b, a, c] = True 
+                r[j, i, k, b, a, c] = True 
+                r[j, k, i, b, a, c] = True 
+                r[k, j, i, b, a, c] = True 
+                r[k, i, j, b, a, c] = True 
+
+                r[i, j, k, b, c, a] = True 
+                r[i, k, j, b, c, a] = True 
+                r[j, i, k, b, c, a] = True 
+                r[j, k, i, b, c, a] = True 
+                r[k, j, i, b, c, a] = True 
+                r[k, i, j, b, c, a] = True 
+
+                r[i, j, k, c, a, b] = True 
+                r[i, k, j, c, a, b] = True 
+                r[j, i, k, c, a, b] = True 
+                r[j, k, i, c, a, b] = True 
+                r[k, j, i, c, a, b] = True 
+                r[k, i, j, c, a, b] = True 
+
+                r[i, j, k, c, b, a] = True 
+                r[i, k, j, c, b, a] = True 
+                r[j, i, k, c, b, a] = True 
+                r[j, k, i, c, b, a] = True 
+                r[k, j, i, c, b, a] = True 
+                r[k, i, j, c, b, a] = True 
+            elif typ == 'baa' and len(h_a) == 2 and len(h_b) == 1:
+                ncount += 1 
+                i = h_b
+                a = p_b 
+                j, k = h_a
+                b, c = p_a 
+
+                r[i, j, k, a, b, c] = True
+                r[i, k, j, a, b, c] = True
+
+                r[i, j, k, a, c, b] = True
+                r[i, k, j, a, c, b] = True
+            else:
+                continue 
+        print(typ, '= ', ncount)
+
+class DMRGEXRCCSD(DMRGEXCCSD):
     pass
 
